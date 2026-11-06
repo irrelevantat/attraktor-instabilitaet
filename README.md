@@ -11,7 +11,7 @@ Interaktive Simulationen zu Selbstorganisation in psychischen Systemen – eine 
 
 Jeder Regler erklärt sich beim Überfahren mit der Maus.
 
-**Tastatur:** `1`/`2` Tab wechseln · `Leertaste` Pause · `F` Vollbild · `R` neu starten
+**Tastatur:** `1`/`2` Tab wechseln · `Leertaste` Pause · `F` Vollbild · `C` Regler im Vollbild ein-/ausblenden · `R` neu starten
 
 ## Lokal starten
 

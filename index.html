@@ -125,6 +125,8 @@ details.sub[open]>summary{margin-bottom:10px}
 .exhibit.is-fs .stage{height:100%;position:relative;top:0}
 .exhibit.is-fs .viz{aspect-ratio:auto;flex:1 1 auto;min-height:0}
 .exhibit.is-fs .panel{overflow:auto;max-height:100%;padding-right:4px}
+.exhibit.is-fs.no-panel{grid-template-columns:minmax(0,1fr)}
+.exhibit.is-fs.no-panel .panel{display:none}
 .disclaimer{margin:0;font-size:.78rem;color:var(--muted)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 
@@ -144,7 +146,7 @@ details.sub[open]>summary{margin-bottom:10px}
       <div class="viz">
         <canvas id="c1" aria-label="Lorenz-Attraktor mit den Mustern A und B in einem drehbaren Raum"></canvas>
         <div class="hud"><div class="chip" id="ch1"><span class="dot"></span><span class="txt"><span class="nm"></span><span class="sb"></span></span></div>
-          <div class="hud-btns"><button class="mini" data-act="pause" type="button">Pause</button><button class="mini" data-act="fs" type="button">Vollbild</button></div></div>
+          <div class="hud-btns"><button class="mini" data-act="pause" type="button">Pause</button><button class="mini" data-act="panel" type="button" hidden>Regler zeigen</button><button class="mini" data-act="fs" type="button">Vollbild</button></div></div>
       </div>
       <div class="tsbox"><canvas id="t1" aria-label="Zeitreihe: in welchem Muster sich der Zustand befindet"></canvas></div>
     </div>
@@ -183,7 +185,7 @@ details.sub[open]>summary{margin-bottom:10px}
       <div class="viz">
         <canvas id="c7" class="flat" aria-label="Oben eine Landschaft mit zwei Tälern, darunter ein Komplexitäts-Resonanz-Diagramm mit einer Zeile pro Item und einer Spalte pro Tag."></canvas>
         <div class="hud"><div class="chip" id="ch7"><span class="dot"></span><span class="txt"><span class="nm"></span><span class="sb"></span></span></div>
-          <div class="hud-btns"><button class="mini" data-act="pause" type="button">Pause</button><button class="mini" data-act="fs" type="button">Vollbild</button></div></div>
+          <div class="hud-btns"><button class="mini" data-act="pause" type="button">Pause</button><button class="mini" data-act="panel" type="button" hidden>Regler zeigen</button><button class="mini" data-act="fs" type="button">Vollbild</button></div></div>
       </div>
       <div class="tsbox"><canvas id="t7" aria-label="Tägliche Itemwerte über den gesamten Verlauf"></canvas></div>
     </div>
@@ -475,12 +477,14 @@ function go(id){show(id);try{if(location.hash!=='#'+id)location.hash=id;}catch(e
 $$('.tab').forEach((t,i,all)=>{t.addEventListener('click',()=>{hideTip();go(t.dataset.target);});t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const nx=all[(i+1)%all.length];nx.focus();go(nx.dataset.target);}});});
 window.addEventListener('hashchange',()=>show((location.hash||'').slice(1)));
 function refreshPause(){ids.forEach(k=>{$('#ex-'+k+' [data-act=pause]').textContent=demos[k].paused?'Weiter':'Pause';});}
-ids.forEach(k=>{const sec=$('#ex-'+k);sec.querySelector('[data-act=pause]').addEventListener('click',()=>{demos[k].paused=!demos[k].paused;refreshPause();});sec.querySelector('[data-act=fs]').addEventListener('click',()=>toggleFS(sec));sec.querySelector('[data-act=reset]').addEventListener('click',()=>demos[k].reset());});
+ids.forEach(k=>{const sec=$('#ex-'+k);sec.querySelector('[data-act=pause]').addEventListener('click',()=>{demos[k].paused=!demos[k].paused;refreshPause();});sec.querySelector('[data-act=fs]').addEventListener('click',()=>toggleFS(sec));sec.querySelector('[data-act=panel]').addEventListener('click',()=>togglePanel(sec));sec.querySelector('[data-act=reset]').addEventListener('click',()=>demos[k].reset());});
 refreshPause();
 const fsOK=!!(document.fullscreenEnabled||document.webkitFullscreenEnabled);if(!fsOK)$$('[data-act=fs]').forEach(b=>b.hidden=true);
 const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement||null;
 function toggleFS(el){if(fsEl()){const ex=document.exitFullscreen||document.webkitExitFullscreen;if(ex){try{const p=ex.call(document);if(p&&p.catch)p.catch(()=>{});}catch(e){}}return;}const req=el.requestFullscreen||el.webkitRequestFullscreen;if(!req)return;try{const p=req.call(el);if(p&&p.catch)p.catch(()=>{});}catch(e){}}
-function onFS(){const f=fsEl();$$('.exhibit').forEach(s=>s.classList.toggle('is-fs',s===f));$$('[data-act=fs]').forEach(b=>b.textContent=f?'Vollbild beenden':'Vollbild');}
+function refreshPanelBtn(){$$('.exhibit').forEach(s=>{const b=s.querySelector('[data-act=panel]');b.hidden=!s.classList.contains('is-fs');b.textContent=s.classList.contains('no-panel')?'Regler zeigen':'Regler ausblenden';});}
+function togglePanel(sec){if(!sec.classList.contains('is-fs'))return;hideTip();sec.classList.toggle('no-panel');refreshPanelBtn();}
+function onFS(){const f=fsEl();$$('.exhibit').forEach(s=>{const on=s===f;if(on&&!s.classList.contains('is-fs'))s.classList.add('no-panel');s.classList.toggle('is-fs',on);if(!on)s.classList.remove('no-panel');});$$('[data-act=fs]').forEach(b=>b.textContent=f?'Vollbild beenden':'Vollbild');refreshPanelBtn();}
 document.addEventListener('fullscreenchange',onFS);document.addEventListener('webkitfullscreenchange',onFS);
 document.addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey)return;const tg=e.target;if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.tagName==='SELECT'||tg.isContentEditable))return;
@@ -489,6 +493,7 @@ document.addEventListener('keydown',e=>{
   if(e.key===' '&&!(tg&&(tg.tagName==='BUTTON'||tg.tagName==='SUMMARY'))){e.preventDefault();demos[active].paused=!demos[active].paused;refreshPause();return;}
   if(e.key==='f'||e.key==='F'){if(fsOK)toggleFS($('#ex-'+active));return;}
   if(e.key==='r'||e.key==='R')demos[active].reset();
+  if(e.key==='c'||e.key==='C')togglePanel($('#ex-'+active));
 });
 let last=performance.now();
 function frame(now){const dt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;const d=demos[active];try{if(!d.paused)d.step(dt);d.draw();}catch(err){console.error(err);}requestAnimationFrame(frame);}
