@@ -1,0 +1,515 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><title>Attraktor und Instabilität</title><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;1,6..96,500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: two tabs, then the simulation stage (sticky on wide screens) beside the settings panel. No titles or explanations on the page; every parameter explains itself on hover. One dark look on purpose: it is a projection screen. */
+:root{
+  --bg:#0B1017; --surface:#111923; --raise:#182230; --fg:#E6EBF2; --muted:#8B97A9; --line:#243041; --grid:#1A2330;
+  --a:#7398CE; --b:#F29A4A; --c:#3CC6B4; --d:#C38FEA; --e:#F25D5D; --accent:#3CC6B4;
+  --f-display:"Bodoni Moda","Bodoni 72",Didot,Georgia,serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:1300px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:26px 48px;display:flex;flex-direction:column;gap:20px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.top{display:flex;flex-direction:column;gap:6px;max-width:62rem}
+.eyebrow{margin:0;font-family:var(--f-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{margin:0;font-family:var(--f-display);font-weight:500;font-size:clamp(1.9rem,1.3rem + 2.2vw,2.8rem);line-height:1.1;text-wrap:balance}
+.lede{margin:0;max-width:68ch;color:var(--muted)}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:9px 16px 10px;border:0;background:none;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;text-align:left}
+.tab b{font-size:.95rem}
+.tab span{font-size:.75rem;font-family:var(--f-mono)}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.tab:hover{color:var(--fg)}
+
+.exhibit{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+@media (max-width:900px){.exhibit{grid-template-columns:minmax(0,1fr)}}
+.dir{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding:14px 16px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+@media (max-width:700px){.dir{grid-template-columns:minmax(0,1fr);gap:10px}}
+.dir h3{margin:0 0 3px;font-family:var(--f-mono);font-size:.7rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dir p{margin:0;font-size:.9rem}
+.stage{position:relative;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+@media (min-width:901px){.stage{position:sticky;top:max(12px,env(safe-area-inset-top,0px))}}
+.viz{position:relative;width:100%;max-width:100%;aspect-ratio:16/10;background:var(--bg)}
+@media (max-width:560px){.viz{aspect-ratio:1/1}}
+.viz canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:grab}
+.viz canvas:active{cursor:grabbing}
+.viz canvas.paint,.viz canvas.paint:active{cursor:crosshair}
+.viz canvas.flat,.viz canvas.flat:active{cursor:default}
+.groups{display:flex;flex-wrap:wrap;gap:6px}
+.gbtn{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 14px;font-weight:700;font-size:.88rem;cursor:pointer;color:var(--muted)}
+.gbtn:hover{color:var(--fg);border-color:var(--fg)}
+.gbtn[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.gbtn span{font-family:var(--f-mono);font-weight:400;font-size:.74rem;opacity:.7;margin-left:7px}
+.seg.two{grid-auto-flow:row;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}
+.seg.two button{background:var(--bg)}
+.seg.two button+button{border-left:0}
+.seg.two button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.srcrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.srcrow input[type=text]{padding:5px 7px}
+.srcrow input[type=checkbox]{width:18px;height:18px;margin:0;accent-color:var(--accent);cursor:pointer}
+.srcrow .rg{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.srcrow .rg output{font-family:var(--f-mono);font-size:.74rem;color:var(--muted);white-space:nowrap}
+.srcrow .x{border:0;background:none;color:var(--muted);font-size:1.15rem;line-height:1;cursor:pointer;padding:2px 6px}
+.srcrow .x:hover{color:var(--fg)}
+.tsbox{border-top:1px solid var(--line);background:var(--bg)}
+.tsbox canvas{display:block;width:100%;height:118px;touch-action:pan-y}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 12px 9px;font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:14px;height:3px;border-radius:2px}
+.hud{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;pointer-events:none}
+.chip{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:7px 12px 7px 10px;min-width:0;max-width:calc(100% - 190px)}
+.chip .dot{width:11px;height:11px;border-radius:50%;flex:none;transition:background .4s}
+.chip .txt{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.chip .nm{font-weight:700;font-size:.92rem}
+.chip .sb{font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:560px){.chip{max-width:calc(100% - 150px);padding:5px 9px}.chip .sb{display:none}.chip .nm{font-size:.8rem}}
+.hud-btns{display:flex;gap:6px;pointer-events:auto;flex:none}
+.mini{border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:5px 10px;font-size:.8rem;font-weight:700;cursor:pointer}
+.mini:hover{border-color:var(--fg)}
+
+.panel{display:flex;flex-direction:column;gap:16px;min-width:0}
+.grp{display:flex;flex-direction:column;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.grp>h3{margin:0;font-family:var(--f-mono);font-size:.72rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ctl{display:flex;flex-direction:column;gap:4px}
+.ctl-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.ctl label,.lbl{font-weight:700;font-size:.88rem}
+.ctl output{font-family:var(--f-mono);font-size:.8rem;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;margin:2px 0;accent-color:var(--accent);cursor:pointer}
+input[type=text],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:7px 9px;font-size:.88rem}
+textarea{min-height:96px;resize:vertical;font-family:var(--f-mono);font-size:.78rem}
+.hint{margin:0;font-size:.78rem;color:var(--muted)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+.switch input{appearance:none;-webkit-appearance:none;width:40px;height:22px;border-radius:11px;background:var(--line);position:relative;flex:none;cursor:pointer;margin:0;transition:background .2s}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--fg);transition:transform .2s}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{transform:translateX(18px);background:var(--bg)}
+.btn{border:1px solid var(--line);background:var(--raise);border-radius:4px;padding:9px 12px;font-weight:700;font-size:.86rem;cursor:pointer;text-align:center}
+.btn:hover{border-color:var(--fg)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.small{padding:5px 10px;font-size:.8rem;align-self:flex-start}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--muted);padding:8px 4px;font-size:.8rem;font-weight:700;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chipb{border:1px solid var(--line);background:transparent;border-radius:999px;padding:4px 11px;font-size:.8rem;cursor:pointer}
+.chipb:hover{border-color:var(--fg)}
+details>summary{cursor:pointer;font-weight:700;font-size:.86rem}
+details.sub{display:block}
+details.sub[open]>summary{margin-bottom:10px}
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pat{border:1px solid var(--line);border-radius:6px;padding:9px 11px;background:var(--surface)}
+.pat>summary{display:flex;align-items:center;gap:8px;list-style:none}
+.pat>summary::-webkit-details-marker{display:none}
+.pat>summary .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.pat>summary .pn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pat>summary::after{content:"▾";color:var(--muted);font-size:.8rem}
+.pat[open]>summary::after{content:"▴"}
+.pbody{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.patlist{display:flex;flex-direction:column;gap:8px}
+
+.exhibit.is-fs{background:var(--bg);width:100%;height:100%;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));grid-template-rows:minmax(0,1fr);align-items:stretch;overflow:hidden}
+.exhibit.is-fs .dir{display:none}
+.exhibit.is-fs .stage{height:100%;position:relative;top:0}
+.exhibit.is-fs .viz{aspect-ratio:auto;flex:1 1 auto;min-height:0}
+.exhibit.is-fs .panel{overflow:auto;max-height:100%;padding-right:4px}
+.disclaimer{margin:0;font-size:.78rem;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+.wrap{padding-block:18px 40px}
+.tip{position:fixed;z-index:1000;max-width:290px;background:var(--raise);border:1px solid var(--line);border-radius:6px;padding:8px 11px;font-size:.84rem;line-height:1.45;color:var(--fg);pointer-events:none;box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.ctl[data-tip] label,.ctl[data-tip]>.ctl-row>label,.switch[data-tip] .lbl,summary[data-tip]{text-decoration:underline dotted;text-decoration-color:var(--muted);text-underline-offset:4px;cursor:help}
+</style>
+
+<div class="wrap">
+  <nav class="tabs" role="tablist" aria-label="Simulationen">
+    <button class="tab" role="tab" id="tab-lorenz" data-target="lorenz" aria-controls="ex-lorenz" aria-selected="true"><b>Lorenz-Attraktor</b></button>
+    <button class="tab" role="tab" id="tab-krise" data-target="krise" aria-controls="ex-krise" aria-selected="false" tabindex="-1"><b>Kritische Instabilität</b></button>
+  </nav>
+
+  <section class="exhibit" id="ex-lorenz" role="tabpanel" aria-labelledby="tab-lorenz">
+    <div class="stage">
+      <div class="viz">
+        <canvas id="c1" aria-label="Lorenz-Attraktor mit den Mustern A und B in einem drehbaren Raum"></canvas>
+        <div class="hud"><div class="chip" id="ch1"><span class="dot"></span><span class="txt"><span class="nm"></span><span class="sb"></span></span></div>
+          <div class="hud-btns"><button class="mini" data-act="pause" type="button">Pause</button><button class="mini" data-act="fs" type="button">Vollbild</button></div></div>
+      </div>
+      <div class="tsbox"><canvas id="t1" aria-label="Zeitreihe: in welchem Muster sich der Zustand befindet"></canvas></div>
+    </div>
+    <aside class="panel">
+      <div class="grp"><h3>Ablauf</h3>
+        <div class="seg" data-seg="stage"><button type="button" data-v="a" data-tip="Nur Muster A: Der Zustand bleibt in A und kreist dort. So lässt sich zuerst dieses eine Muster erklären.">1 · Muster A</button><button type="button" data-v="both" data-tip="Gibt die Bewegung frei. Der Zustand verlässt A, wechselt zwischen A und B, und das ganze Muster entsteht.">2 · Beide Muster</button></div>
+      </div>
+      <div class="grp"><h3>Muster A</h3>
+        <div class="ctl" data-tip="Name von Muster A. Er erscheint im Bild am Muster."><label for="l-nA">Name</label><input type="text" id="l-nA" data-t="nA"></div>
+        <div class="ctl" data-tip="Wie stark Muster A den Zustand festhält. Je höher, desto länger bleibt der Zustand in A und desto zuverlässiger kehrt er dorthin zurück. Messbar als Anteil der Zeit in A (unten in der Zeitreihe). In einer Landschaft entspräche das der Tiefe des Tals."><div class="ctl-row"><label for="l-aA">Anziehungskraft</label><output for="l-aA"></output></div><input type="range" id="l-aA" data-k="aA" min="0" max="1" step="0.01" data-d="2"></div>
+      </div>
+      <div class="grp"><h3>Muster B</h3>
+        <div class="ctl" data-tip="Name von Muster B. Er erscheint im Bild, sobald beide Muster gezeigt werden."><label for="l-nB">Name</label><input type="text" id="l-nB" data-t="nB"></div>
+        <div class="ctl" data-tip="Wie stark Muster B den Zustand festhält. Je höher, desto länger bleibt der Zustand in B und desto zuverlässiger kehrt er dorthin zurück. Sind A und B gleich stark, teilt sich die Zeit etwa hälftig auf."><div class="ctl-row"><label for="l-aB">Anziehungskraft</label><output for="l-aB"></output></div><input type="range" id="l-aB" data-k="aB" min="0" max="1" step="0.01" data-d="2"></div>
+      </div>
+      <div class="grp"><h3>Einflüsse</h3>
+        <div class="ctl" data-tip="Zufällige Einflüsse von außen. Sie verändern die Bahn ständig ein wenig und können den Zustand auch aus einem starken Muster herausstoßen."><div class="ctl-row"><label for="l-nz">Unruhe</label><output for="l-nz"></output></div><input type="range" id="l-nz" data-k="nz" min="0" max="3" step="0.05" data-d="2"></div>
+        <div class="row"><button class="btn" type="button" data-kick="-1" data-tip="Ein einzelnes Ereignis stößt den Zustand kurz in Richtung Muster A.">Anstoß zu A</button><button class="btn" type="button" data-kick="1" data-tip="Ein einzelnes Ereignis stößt den Zustand kurz in Richtung Muster B.">Anstoß zu B</button></div>
+      </div>
+      <div class="grp"><h3>Darstellung</h3>
+        <div class="ctl" data-tip="Wie schnell die Bewegung abläuft."><div class="ctl-row"><label for="l-tempo">Tempo</label><output for="l-tempo"></output></div><input type="range" id="l-tempo" data-k="tempo" min="0.05" max="1.2" step="0.01" data-d="2"></div>
+        <div class="ctl" data-tip="Wie viele Sekunden der zurückgelegten Bahn sichtbar bleiben."><div class="ctl-row"><label for="l-trail">Spur</label><output for="l-trail"></output></div><input type="range" id="l-trail" data-k="trail" min="2" max="40" step="1" data-d="0" data-u=" s"></div>
+        <label class="switch" for="l-lab" data-tip="Namen der Muster im Bild ein- oder ausblenden."><span class="lbl">Beschriftung</span><input type="checkbox" id="l-lab" data-c="labels"></label>
+        <label class="switch" for="l-ax" data-tip="Die drei Achsen des Raums ein- oder ausblenden."><span class="lbl">Achsen</span><input type="checkbox" id="l-ax" data-c="axes"></label>
+        <label class="switch" for="l-rot" data-tip="Dreht den Raum langsam. Mit Ziehen lässt er sich auch von Hand drehen."><span class="lbl">Langsam drehen</span><input type="checkbox" id="l-rot" data-c="rot"></label>
+        <details class="sub"><summary data-tip="Bezeichnungen an beiden Enden jeder Achse.">Achsen beschriften</summary>
+          <div class="pairs"><input type="text" aria-label="Achse 1 links" data-t="x0"><input type="text" aria-label="Achse 1 rechts" data-t="x1"><input type="text" aria-label="Achse 2 unten" data-t="y0"><input type="text" aria-label="Achse 2 oben" data-t="y1"><input type="text" aria-label="Achse 3 vorn" data-t="z0"><input type="text" aria-label="Achse 3 hinten" data-t="z1"></div>
+        </details>
+      </div>
+      <button class="btn" data-act="reset" type="button" data-tip="Setzt den Zustand zurück in Muster A.">Neu starten</button>
+    </aside>
+  </section>
+
+  <section class="exhibit" id="ex-krise" role="tabpanel" aria-labelledby="tab-krise" hidden>
+    <div class="stage">
+      <div class="viz">
+        <canvas id="c7" class="flat" aria-label="Oben eine Landschaft mit zwei Tälern, darunter ein Komplexitäts-Resonanz-Diagramm mit einer Zeile pro Item und einer Spalte pro Tag."></canvas>
+        <div class="hud"><div class="chip" id="ch7"><span class="dot"></span><span class="txt"><span class="nm"></span><span class="sb"></span></span></div>
+          <div class="hud-btns"><button class="mini" data-act="pause" type="button">Pause</button><button class="mini" data-act="fs" type="button">Vollbild</button></div></div>
+      </div>
+      <div class="tsbox"><canvas id="t7" aria-label="Tägliche Itemwerte über den gesamten Verlauf"></canvas></div>
+    </div>
+    <aside class="panel">
+      <div class="grp"><h3>Verlauf</h3>
+        <div class="chips">
+          <button class="chipb" type="button" data-preset="crit" data-tip="Die Muster werden vorübergehend instabil, danach begünstigen die Bedingungen das neue Muster.">Mit kritischer Instabilität</button>
+          <button class="chipb" type="button" data-preset="jump" data-tip="Stabile Muster und ein starker Zug zum Neuen. Der Wechsel kommt plötzlich, ohne erhöhte Schwankungen davor.">Sprung ohne Vorwarnung</button>
+          <button class="chipb" type="button" data-preset="smooth" data-tip="Flache Täler ohne Schwelle. Der Zustand gleitet langsam ins neue Muster.">Allmählich</button>
+          <button class="chipb" type="button" data-preset="instab" data-tip="Die Muster werden instabil, aber nichts zieht zum Neuen. Ob ein Wechsel geschieht, entscheidet der Zufall.">Instabil ohne Richtung</button>
+          <button class="chipb" type="button" data-preset="stable" data-tip="Keine Destabilisierung und kein Zug zum Neuen. Der Zustand bleibt im alten Muster.">Stabil</button>
+        </div>
+        <div class="ctl" data-tip="Wie stark beide Muster um den Zeitpunkt der Destabilisierung an Halt verlieren. Die Täler werden flacher, die Schwankungen größer."><div class="ctl-row"><label for="k-dest">Destabilisierung</label><output for="k-dest"></output></div><input type="range" id="k-dest" data-k="dest" min="0" max="1" step="0.01" data-d="2"></div>
+        <div class="ctl" data-tip="Wie stark die Bedingungen ab der kritischen Phase das neue Muster begünstigen. Bei 0 ist offen, in welches Muster der Zustand fällt."><div class="ctl-row"><label for="k-h">Zug zum neuen Muster</label><output for="k-h"></output></div><input type="range" id="k-h" data-k="hmax" min="0" max="0.8" step="0.01" data-d="2"></div>
+        <div class="ctl" data-tip="Tiefe beider Täler außerhalb der kritischen Phase. Hohe Werte halten den Zustand fest, niedrige lassen ihn leicht gleiten."><div class="ctl-row"><label for="k-a">Musterstabilität</label><output for="k-a"></output></div><input type="range" id="k-a" data-k="a" min="0.3" max="2.5" step="0.05" data-d="2"></div>
+        <div class="ctl" data-tip="Alltägliche Schwankungen des Zustands, unabhängig von der kritischen Phase."><div class="ctl-row"><label for="k-nz">Grundunruhe</label><output for="k-nz"></output></div><input type="range" id="k-nz" data-k="nz" min="0" max="0.5" step="0.01" data-d="2"></div>
+        <div class="ctl" data-tip="An welcher Stelle des Verlaufs die Muster am schwächsten sind, als Anteil der Gesamtdauer. 0,50 ist die Mitte."><div class="ctl-row"><label for="k-cf">Zeitpunkt der Destabilisierung</label><output for="k-cf"></output></div><input type="range" id="k-cf" data-k="cf" min="0.15" max="0.85" step="0.01" data-d="2"></div>
+        <button class="btn" id="k-pulse" type="button" data-tip="Schwächt ab heute für 10 Tage beide Muster und verstärkt die Schwankungen, etwa durch eine intensive Therapiephase.">Jetzt destabilisieren (10 Tage)</button>
+      </div>
+      <div class="grp"><h3>Messung</h3>
+        <div class="ctl" data-tip="Anzahl der simulierten Tage. An jedem Tag wird der Fragebogen einmal ausgefüllt."><div class="ctl-row"><label for="k-days">Dauer</label><output for="k-days"></output></div><input type="range" id="k-days" data-k="days" min="60" max="200" step="10" data-d="0" data-u=" Tage"></div>
+        <div class="ctl" data-tip="Wie viele Items als Zeilen gezeigt werden. Die unterste Zeile ist der Mittelwert der gezeigten Items."><div class="ctl-row"><label for="k-ni">Items</label><output for="k-ni"></output></div><input type="range" id="k-ni" data-k="ni" min="3" max="10" step="1" data-d="0"></div>
+        <div class="ctl" data-tip="Über wie viele aufeinanderfolgende Tage die dynamische Komplexität jeweils berechnet wird (gleitendes Fenster, wie im SNS)."><div class="ctl-row"><label for="k-w">Fenster</label><output for="k-w"></output></div><input type="range" id="k-w" data-k="W" min="5" max="14" step="1" data-d="0" data-u=" Tage"></div>
+        <div class="ctl" data-tip="Zufällige Ungenauigkeit beim Ausfüllen des Fragebogens."><div class="ctl-row"><label for="k-mn">Messrauschen</label><output for="k-mn"></output></div><input type="range" id="k-mn" data-k="mn" min="0" max="1" step="0.05" data-d="2"></div>
+        <details class="sub"><summary data-tip="Ein Item pro Zeile. Ein Minus am Anfang heißt: Der Wert sinkt im neuen Muster.">Itemnamen</summary>
+          <div class="ctl"><textarea id="k-items" aria-label="Itemnamen, eines pro Zeile"></textarea><button class="btn small" id="k-apply" type="button">Übernehmen und neu starten</button></div>
+        </details>
+      </div>
+      <div class="grp"><h3>Darstellung</h3>
+        <div class="ctl" data-tip="Simulierte Tage pro Sekunde."><div class="ctl-row"><label for="k-tempo">Tempo</label><output for="k-tempo"></output></div><input type="range" id="k-tempo" data-k="tempo" min="1" max="20" step="1" data-d="0" data-u=" Tage/s"></div>
+        <label class="switch" for="k-land" data-tip="Blendet die Landschaft mit den beiden Tälern oben ein oder aus."><span class="lbl">Landschaft zeigen</span><input type="checkbox" id="k-land" data-c="land"></label>
+        <label class="switch" for="k-loop" data-tip="Startet nach dem letzten Tag automatisch einen neuen Verlauf."><span class="lbl">Am Ende neu starten</span><input type="checkbox" id="k-loop" data-c="loop"></label>
+      </div>
+      <button class="btn" data-act="reset" type="button" data-tip="Beginnt einen neuen Verlauf ab Tag 0.">Neu starten</button>
+    </aside>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const reduceMotion=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,smooth=t=>t*t*(3-2*t);
+const fmt=(v,d)=>{const s=v.toFixed(d).replace('.',',');return s.charAt(0)==='-'&&+v.toFixed(d)!==0?'−'+s.slice(1):s.replace(/^-/,'');};
+let gS=null;function gauss(){if(gS!==null){const s=gS;gS=null;return s;}let u=0;while(!u)u=Math.random();const v=Math.random(),m=Math.sqrt(-2*Math.log(u));gS=m*Math.sin(2*Math.PI*v);return m*Math.cos(2*Math.PI*v);}
+function hexRgb(h){h=(h||'#888888').trim().replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16);return [n>>16&255,n>>8&255,n&255];}
+const C={};(()=>{const cs=getComputedStyle(document.documentElement);for(const k of ['bg','surface','raise','fg','muted','line','a','b','c','d','e'])C[k]=hexRgb(cs.getPropertyValue('--'+k));})();
+const PCOL=[C.a,C.b,C.c,C.d],PCN=['a','b','c','d'];
+const rgba=(c,a)=>'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+a+')',rgb=c=>'rgb('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+')';
+const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+const BODY='"Atkinson Hyperlegible", system-ui, sans-serif',MONO='"IBM Plex Mono", ui-monospace, Menlo, monospace';
+
+function fit(cv){const r=cv.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),W=Math.max(1,Math.round(r.width*dpr)),H=Math.max(1,Math.round(r.height*dpr));if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;}const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,r.width,r.height);return {ctx,w:r.width,h:r.height};}
+function makeCam(o){const c=Object.assign({yaw:0.5,pitch:0.25,D:7,scale:100,cx:0,cy:0,pmin:-0.3,pmax:1.2},o);c.update=function(){this.a=Math.cos(this.yaw);this.b=Math.sin(this.yaw);this.cp=Math.cos(this.pitch);this.sp=Math.sin(this.pitch);};c.update();return c;}
+function proj(c,x,y,z){const x1=x*c.a-z*c.b,z1=x*c.b+z*c.a,y2=y*c.cp+z1*c.sp,z2=-y*c.sp+z1*c.cp,f=c.D/(c.D+z2);return [c.cx+x1*f*c.scale,c.cy-y2*f*c.scale,z2,f];}
+function dragRotate(cv,cam){
+  let d=null;
+  cv.addEventListener('pointerdown',e=>{d={x:e.clientX,y:e.clientY,yaw:cam.yaw,pitch:cam.pitch};cam.dragging=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+  cv.addEventListener('pointermove',e=>{if(!d)return;cam.yaw=d.yaw+(e.clientX-d.x)*0.008;if(e.pointerType==='mouse')cam.pitch=clamp(d.pitch+(e.clientY-d.y)*0.006,cam.pmin,cam.pmax);});
+  const end=()=>{d=null;cam.dragging=false;};cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+}
+function seg(ctx,a,b){ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();}
+function otext(ctx,txt,x,y,col,font,align,W){ctx.font=font;ctx.textAlign=align||'center';ctx.textBaseline='middle';const tw=ctx.measureText(txt).width;if(ctx.textAlign==='center'&&W)x=clamp(x,tw/2+6,Math.max(tw/2+6,W-tw/2-6));ctx.lineJoin='round';ctx.lineWidth=4;ctx.strokeStyle=rgba(C.bg,0.85);ctx.strokeText(txt,x,y);ctx.fillStyle=typeof col==='string'?col:rgb(col);ctx.fillText(txt,x,y);return tw;}
+function gtext(ctx,t,x,y,col,align){ctx.font='500 11px '+MONO;ctx.fillStyle=typeof col==='string'?col:rgb(col);ctx.textAlign=align||'right';ctx.textBaseline='middle';ctx.fillText(t,x,y);}
+/* faint floor and three axes on the edges of the cube [-1,1]^3; y is vertical */
+function drawAxes(ctx,cam,lab,W){
+  const P=(x,y,z)=>proj(cam,x,y,z);
+  ctx.lineWidth=1;ctx.strokeStyle=rgba(C.fg,0.05);
+  for(let i=-2;i<=2;i++){const v=i/2;seg(ctx,P(v,-1,-1),P(v,-1,1));seg(ctx,P(-1,-1,v),P(1,-1,v));}
+  const AX=[{a:[-1,-1,-1],b:[1,-1,-1],l:lab.x},{a:[-1,-1,-1],b:[-1,-1,1],l:lab.z},{a:[-1,-1,-1],b:[-1,1,-1],l:lab.y}],cen=P(0,0,0);
+  for(const ax of AX){
+    ctx.strokeStyle=rgba(C.fg,0.2);ctx.lineWidth=1.2;seg(ctx,P(...ax.a),P(...ax.b));
+    [[ax.l[0],0.22],[ax.l[1],0.92]].forEach(([t,u])=>{if(!t)return;const p=P(...ax.a.map((v,i)=>v+(ax.b[i]-v)*u));let ox=p[0]-cen[0],oy=p[1]-cen[1];const m=Math.hypot(ox,oy)||1;otext(ctx,t,p[0]+ox/m*16,p[1]+oy/m*12,rgba(C.fg,0.55),'400 12px '+BODY,'center',W);});
+  }
+}
+/* fading trail: full strength for the newer part, then fades out toward maxAge */
+function drawTrail(ctx,cam,pts,map,now,maxAge,colOf,lw,amul){
+  if(pts.length<2)return;let key=null,prev=null;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';
+  for(let i=0;i<pts.length;i++){
+    const o=pts[i],age=now-o.t,a=(age<maxAge*0.55?1:Math.max(0,1-(age-maxAge*0.55)/(maxAge*0.45)))*(amul||0.9),w=map(o.s),p=proj(cam,w[0],w[1],w[2]);
+    if(prev&&a>0.02){const c=colOf(o),bk=Math.round(a*12)/12,k=(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+'|'+bk;if(k!==key){if(key)ctx.stroke();ctx.beginPath();ctx.strokeStyle=rgba(c,bk);ctx.moveTo(prev[0],prev[1]);key=k;}ctx.lineTo(p[0],p[1]);}
+    else if(key){ctx.stroke();key=null;}
+    prev=p;
+  }
+  if(key)ctx.stroke();
+}
+function head(ctx,p,col,r){const g=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],r*3.4);g.addColorStop(0,rgba(col,0.5));g.addColorStop(1,rgba(col,0));ctx.fillStyle=g;ctx.beginPath();ctx.arc(p[0],p[1],r*3.4,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(p[0],p[1],r,0,Math.PI*2);ctx.fillStyle=rgb(col);ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=rgb(C.bg);ctx.stroke();}
+function chip(el){const dot=el.querySelector('.dot'),nm=el.querySelector('.nm'),sb=el.querySelector('.sb');let last='';return (n,s,col)=>{const k=n+'|'+s+'|'+col.join();if(k===last)return;last=k;nm.textContent=n;sb.textContent=s;sb.hidden=!s;dot.style.background=rgb(col);};}
+function tsBox(w,h,L,R,T,B){return {L,T,pw:w-L-R,ph:h-T-B};}
+/* wiring for range/text/checkbox/segment controls inside a panel */
+function bindPanel(sec,P,change){
+  const outs=[];
+  $$('input[type=range][data-k]',sec).forEach(inp=>{const k=inp.dataset.k,out=sec.querySelector('output[for="'+inp.id+'"]'),d=+(inp.dataset.d||2),u=inp.dataset.u||'',f=inp.dataset.f;
+    const show=()=>{if(out)out.textContent=f==='pow'?fmt(Math.pow(10,-P[k]),P[k]):fmt(P[k],d)+u;};
+    outs.push(()=>{inp.value=P[k];show();});inp.addEventListener('input',()=>{P[k]=+inp.value;show();change&&change(k);});});
+  $$('[data-t]',sec).forEach(inp=>{const k=inp.dataset.t,sy=inp.dataset.sync?$('#'+inp.dataset.sync):null;outs.push(()=>{inp.value=P[k];if(sy)sy.textContent=P[k];});inp.addEventListener('input',()=>{P[k]=inp.value;if(sy)sy.textContent=inp.value;});});
+  $$('input[type=checkbox][data-c]',sec).forEach(cb=>{const k=cb.dataset.c;outs.push(()=>{cb.checked=!!P[k];});cb.addEventListener('change',()=>{P[k]=cb.checked;change&&change(k);});});
+  $$('[data-seg]',sec).forEach(g=>{const k=g.dataset.seg,bs=$$('button[data-v]',g);outs.push(()=>bs.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===String(P[k])))));bs.forEach(b=>b.addEventListener('click',()=>{P[k]=b.dataset.v;refresh();change&&change(k);}));});
+  function refresh(){outs.forEach(f=>f());$$('[data-show]',sec).forEach(el=>{const m=el.dataset.show.match(/^(\w+)(!?=)(\w+)$/);if(!m)return;const eq=String(P[m[1]])===m[3];el.hidden=m[2]==='='?!eq:eq;});}
+  refresh();return refresh;
+}
+const K1=[],K2=[],K3=[],K4=[],TM=[];
+function rk4(s,h,f){const n=s.length;f(s,K1);for(let i=0;i<n;i++)TM[i]=s[i]+h/2*K1[i];TM.length=n;f(TM,K2);for(let i=0;i<n;i++)TM[i]=s[i]+h/2*K2[i];f(TM,K3);for(let i=0;i<n;i++)TM[i]=s[i]+h*K3[i];f(TM,K4);for(let i=0;i<n;i++)s[i]+=h/6*(K1[i]+2*K2[i]+2*K3[i]+K4[i]);}
+/* Lorenz view scaling, smoothed so parameter changes glide */
+function lzScale(Z,rho){const scT=Math.max(8,24*Math.max(Math.sqrt(Math.max(rho,1)/28),rho/28*0.9)),czT=rho>1?(rho-1)*0.85:0;Z.sc+=(scT-Z.sc)*0.05;Z.cz+=(czT-Z.cz)*0.05;}
+function lzUnstick(s,o,rho,beta){
+  if(rho>1&&Math.hypot(s[o],s[o+1],s[o+2])<1e-3){s[o]+=0.05;return;}
+  if(rho>24.74){const q=Math.sqrt(beta*(rho-1)),sg=s[o]<0?-1:1;if(Math.hypot(s[o]-sg*q,s[o+1]-sg*q,s[o+2]-(rho-1))<0.05)s[o]+=sg*1.2;}
+}
+function wingLabels(ctx,cam,map,rho,beta,nA,nB,W){
+  if(rho<=1){const w=map([0,0,0]),p=proj(cam,w[0],w[1],w[2]);otext(ctx,'Ruhepunkt',p[0],p[1]-18,rgba(C.fg,0.8),'700 13px '+BODY,'center',W);return;}
+  const q=Math.sqrt(beta*(rho-1));
+  [[-q,'Muster A',nA,C.a],[q,'Muster B',nB,C.b]].forEach(([v,t,n,c])=>{const w=map([v,v,rho-1]),fp=proj(cam,w[0],w[1],w[2]),p=proj(cam,w[0],1.0,w[2]);
+    ctx.beginPath();ctx.arc(fp[0],fp[1],4,0,Math.PI*2);ctx.strokeStyle=rgba(c,0.55);ctx.lineWidth=1.5;ctx.stroke();
+    const ox=v<0?-36:36;otext(ctx,t,p[0]+ox,p[1],c,'700 14px '+BODY,'center',W);if(n)otext(ctx,n,p[0]+ox,p[1]+17,rgba(C.fg,0.85),'400 13px '+BODY,'center',W);});
+}
+
+const demos={};
+
+/* ---------- helpers for the newer simulations ---------- */
+function makeLUT(stops){const t=new Uint8ClampedArray(768);for(let i=0;i<256;i++){const x=i/255;let k=0;while(k<stops.length-2&&x>stops[k+1][0])k++;const a=stops[k],b=stops[k+1],f=clamp((x-a[0])/(b[0]-a[0]),0,1);for(let j=0;j<3;j++)t[i*3+j]=a[1][j]+(b[1][j]-a[1][j])*f;}return t;}
+function makeFFT(n){const lev=Math.round(Math.log2(n)),rev=new Uint32Array(n),co=new Float64Array(n/2),si=new Float64Array(n/2);
+  for(let i=0;i<n;i++){let r=0;for(let b=0;b<lev;b++)r|=((i>>b)&1)<<(lev-1-b);rev[i]=r;}
+  for(let i=0;i<n/2;i++){co[i]=Math.cos(2*Math.PI*i/n);si[i]=Math.sin(2*Math.PI*i/n);}
+  return function(re,im,inv){const sg=inv?-1:1;for(let i=0;i<n;i++){const j=rev[i];if(j>i){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}
+    for(let size=2;size<=n;size<<=1){const half=size>>1,step=n/size;for(let i=0;i<n;i+=size){for(let j=0,k=0;j<half;j++,k+=step){const l=i+j+half,tr=re[l]*co[k]+sg*im[l]*si[k],ti=-sg*re[l]*si[k]+im[l]*co[k];re[l]=re[i+j]-tr;im[l]=im[i+j]-ti;re[i+j]+=tr;im[i+j]+=ti;}}}
+    if(inv){for(let i=0;i<n;i++){re[i]/=n;im[i]/=n;}}};}
+function fft2(re,im,nx,ny,fx,fy,inv,tr,ti){
+  for(let y=0;y<ny;y++){const o=y*nx;for(let x=0;x<nx;x++){tr[x]=re[o+x];ti[x]=im[o+x];}fx(tr,ti,inv);for(let x=0;x<nx;x++){re[o+x]=tr[x];im[o+x]=ti[x];}}
+  for(let x=0;x<nx;x++){for(let y=0;y<ny;y++){tr[y]=re[y*nx+x];ti[y]=im[y*nx+x];}fy(tr,ti,inv);for(let y=0;y<ny;y++){re[y*nx+x]=tr[y];im[y*nx+x]=ti[y];}}
+}
+function lineSeries(ctx,pts,X,Y,col,lw){if(pts.length<2)return;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(X(p[0]),Y(p[1])):ctx.moveTo(X(p[0]),Y(p[1])));ctx.strokeStyle=col;ctx.lineWidth=lw||1.7;ctx.lineJoin='round';ctx.stroke();}
+const pct=v=>Math.round(clamp(v,0,1)*100)+' %';
+function legendRow(ctx,items,x,y,maxW){let cx=x,cy=y;ctx.font='500 11px '+MONO;ctx.textBaseline='middle';ctx.textAlign='left';
+  for(const it of items){const tw=ctx.measureText(it.t).width+26;if(cx+tw>x+maxW&&cx>x){cx=x;cy+=16;}
+    if(it.k==='dash'){ctx.setLineDash([3,3]);ctx.strokeStyle=it.c;ctx.lineWidth=1.5;seg(ctx,[cx,cy],[cx+14,cy]);ctx.setLineDash([]);}
+    else if(it.k==='box'){ctx.fillStyle=it.c;ctx.fillRect(cx,cy-5,14,10);}
+    else if(it.k==='tri'){ctx.fillStyle=it.c;ctx.beginPath();ctx.moveTo(cx+3,cy-4);ctx.lineTo(cx+11,cy-4);ctx.lineTo(cx+7,cy+4);ctx.closePath();ctx.fill();}
+    else{ctx.strokeStyle=it.c;ctx.lineWidth=2;seg(ctx,[cx,cy],[cx+14,cy]);}
+    ctx.fillStyle=rgb(C.muted);ctx.fillText(it.t,cx+18,cy);cx+=tw;}
+  return cy+12;}
+
+/* =====================================================================
+   LORENZ with a separate attraction per wing: each side gets its own driving value.
+   Low value = deep, holding pattern; high value = shallow pattern the state leaves quickly.
+   ===================================================================== */
+demos.lorenz=(function(){
+  const sec=$('#ex-lorenz'),cv=$('#c1'),ts=$('#t1'),setChip=chip($('#ch1'));
+  const P={stage:'a',aA:0.6,aB:0.5,nz:1,tempo:0.3,trail:15,labels:true,axes:true,rot:false,
+    nA:'',nB:'',x0:'',x1:'',y0:'',y1:'',z0:'',z1:''};
+  const SG=10,BE=8/3,DT=0.004,drive=a=>44-20*a;
+  const tA=()=>P.stage==='a'?Math.max(26.5,drive(P.aA)):drive(P.aA),tB=()=>drive(P.aB),tW=()=>P.stage==='a'?1:0;
+  const TAU=0.08,GN=1.6/Math.sqrt(2*TAU),sp=v=>v>30?v:Math.log1p(Math.exp(v)),eta=[0,0,0];
+  const LR=[26.5,28,30,32,35,38,41,44],LX=[-7.25,-7.05,-6.88,-6.72,-6.41,-6.09,-5.75,-5.39],LY=[-7.01,-6.49,-5.81,-5.02,-3.58,-1.92,-0.12,1.79],LZ=[23.72,24.29,25.12,25.85,26.76,27.46,28.01,28.49],LS=[8.64,10.72,12.97,15.09,18.11,20.97,23.65,26.11];
+  const lut=(T,r)=>{r=clamp(r,LR[0],LR[7]);let i=0;while(i<6&&r>LR[i+1])i++;const u=(r-LR[i])/(LR[i+1]-LR[i]);return T[i]+(T[i+1]-T[i])*u;};
+  const Q={rA:tA(),rB:tB(),nz:P.nz,wall:tW()},Z={sc:lut(LS,Q.rA)*1.25,cz:lut(LZ,Q.rA),ox:lut(LX,Q.rA),oy:lut(LY,Q.rA)};
+  let s=[0,0,0],pts=[],hist=[],wt=0,acc=0,samp=0,kick=0,kickDir=0;
+  const cam=makeCam({yaw:-0.6,pitch:0.22,D:7});dragRotate(cv,cam);
+  const f=(x,o)=>{const w=1/(1+Math.exp(-x[0]/1.5)),r=Q.rA*(1-w)+Q.rB*w;o[0]=SG*(x[1]-x[0])-(Q.wall>1e-3?Q.wall*70*sp((x[0]+2)/0.7):0);o[1]=x[0]*(r-x[2])-x[1];o[2]=x[0]*x[1]-BE*x[2];};
+  function reset(){Q.rA=tA();Q.rB=tB();Q.nz=P.nz;const w0=tW();Q.wall=1;const q=Math.sqrt(BE*(Q.rA-1));s=[-q+2,-q,Q.rA-1];eta.fill(0);
+    for(let i=0;i<15000;i++)rk4(s,DT,f);Q.wall=w0;pts=[];hist=[];}
+  function step(dt){
+    wt+=dt;if(P.rot&&!cam.dragging)cam.yaw+=dt*0.08;
+    const k=1-Math.exp(-dt/1.5);Q.rA+=(tA()-Q.rA)*k;Q.rB+=(tB()-Q.rB)*k;Q.nz+=(P.nz-Q.nz)*k;Q.wall+=(tW()-Q.wall)*k;
+    acc+=dt*P.tempo;let n=0;
+    while(acc>=DT&&n<400){acc-=DT;n++;rk4(s,DT,f);const g=Q.nz*GN*DT,c=Math.sqrt(2*DT/TAU);for(let i=0;i<3;i++){eta[i]+=-eta[i]*DT/TAU+c*gauss();s[i]+=g*eta[i];}if(kick>0){s[0]+=kickDir*45*DT;kick-=DT;}}
+    samp+=dt;while(samp>=1/30){samp-=1/30;pts.push({t:wt,s:s.slice()});hist.push({t:wt,x:s[0]});}
+    while(pts.length&&pts[0].t<wt-P.trail)pts.shift();while(hist.length&&hist[0].t<wt-60)hist.shift();
+  }
+  function labels(ctx,map,W,ly){
+    const L=[[-Math.sqrt(BE*Math.max(Q.rA-1,0.1)),Q.rA-1,'Muster A',P.nA,C.a,P.stage==='a'?0:-36,ly]];
+    if(P.stage!=='a')L.push([Math.sqrt(BE*Math.max(Q.rB-1,0.1)),Q.rB-1,'Muster B',P.nB,C.b,36,1]);
+    for(const [v,z,t,n,c,ox,yy] of L){const m=map([v,v,z]),fp=proj(cam,m[0],m[1],m[2]),p=proj(cam,m[0],yy,m[2]);
+      ctx.beginPath();ctx.arc(fp[0],fp[1],4,0,Math.PI*2);ctx.strokeStyle=rgba(c,0.55);ctx.lineWidth=1.5;ctx.stroke();
+      otext(ctx,t,p[0]+ox,p[1],c,'700 14px '+BODY,'center',W);if(n)otext(ctx,n,p[0]+ox,p[1]+17,rgba(C.fg,0.85),'400 13px '+BODY,'center',W);}
+  }
+  function draw(){
+    let labTop=1;const {ctx,w,h}=fit(cv),big=Math.max(Q.rA,Q.rB),one=P.stage==='a';
+    let scT=Math.max(8,24*Math.max(Math.sqrt(big/28),big/28*0.9)),czT=(big-1)*0.85,oxT=0,oyT=0;
+    if(one){scT=lut(LS,Q.rA)*1.75;czT=lut(LZ,Q.rA);oxT=lut(LX,Q.rA);oyT=lut(LY,Q.rA);
+      const R=pts.filter(o=>o.t>wt-Math.min(P.trail,10));if(R.length>40){let a=0,b=0,c=0,v=0;for(const o of R){a+=o.s[0];b+=o.s[1];c+=o.s[2];}a/=R.length;b/=R.length;c/=R.length;
+        for(const o of R)v+=(o.s[0]-a)**2+(o.s[1]-b)**2+(o.s[2]-c)**2;scT=Math.max(6,Math.sqrt(v/R.length)*1.75);oxT=a;oyT=b;czT=c;}
+      let top=-1e9;for(const o of R)top=Math.max(top,o.s[2]);labTop=R.length?Math.min(1.06,(top-Z.cz)/Z.sc+0.16):1;}else labTop=1;
+    const ez=one?0.025:0.04;Z.sc+=(scT-Z.sc)*ez;Z.cz+=(czT-Z.cz)*ez;Z.ox+=(oxT-Z.ox)*ez;Z.oy+=(oyT-Z.oy)*ez;
+    const map=x=>[(x[0]-Z.ox)/Z.sc,(x[2]-Z.cz)/Z.sc,(x[1]-Z.oy)/Z.sc];
+    cam.scale=Math.min(w/2.6,h/2.35);cam.cx=w/2;cam.cy=h*0.55;cam.update();
+    if(P.axes)drawAxes(ctx,cam,{x:[P.x0,P.x1],y:[P.y0,P.y1],z:[P.z0,P.z1]},w);
+    if(P.labels)labels(ctx,map,w,labTop);
+    drawTrail(ctx,cam,pts,map,wt,P.trail,o=>o.s[0]<0?C.a:C.b,2,0.9);
+    const m=map(s);head(ctx,proj(cam,m[0],m[1],m[2]),C.fg,5.5);
+    const inA=s[0]<0;setChip(inA?'Muster A':'Muster B',inA?P.nA:P.nB,inA?C.a:C.b);
+    drawTS();
+  }
+  function drawTS(){
+    const {ctx,w,h}=fit(ts),F=tsBox(w,h,40,12,16,12),span=20,t0=wt-span,X=t=>F.L+(t-t0)/span*F.pw;
+    const ym=Math.max(8,Math.max(...hist.slice(-600).map(o=>Math.abs(o.x)),8)*1.05),Y=v=>F.T+(1-(clamp(v,-ym,ym)+ym)/(2*ym))*F.ph;
+    ctx.strokeStyle=rgba(C.fg,0.1);ctx.lineWidth=1;seg(ctx,[F.L,Y(0)],[F.L+F.pw,Y(0)]);
+    const H=hist.filter(o=>o.t>=t0-0.1);ctx.lineWidth=1.7;ctx.lineJoin='round';
+    let key=null;for(let i=1;i<H.length;i++){const a=H[i-1],b=H[i],k=(a.x+b.x)<0?'a':'b';if(k!==key){if(key)ctx.stroke();ctx.beginPath();ctx.strokeStyle=rgb(k==='a'?C.a:C.b);ctx.moveTo(X(a.t),Y(a.x));key=k;}ctx.lineTo(X(b.t),Y(b.x));}if(key)ctx.stroke();
+    gtext(ctx,'B',F.L-10,F.T+6,C.b);gtext(ctx,'A',F.L-10,F.T+F.ph-6,C.a);
+    if(hist.length>30){let a=0;hist.forEach(o=>{if(o.x<0)a++;});const pa=Math.round(a/hist.length*100);gtext(ctx,'letzte '+Math.round(Math.min(60,wt))+' s: A '+pa+' % · B '+(100-pa)+' %',F.L+F.pw,F.T-6,C.muted,'right');}
+  }
+  bindPanel(sec,P,null);
+  $$('[data-kick]',sec).forEach(b=>b.addEventListener('click',()=>{kickDir=+b.dataset.kick;kick=0.25;}));
+  reset();
+  return {paused:reduceMotion,step,draw,reset};
+})();
+
+/* =====================================================================
+   SELBSTORGANISATION 3: Kritische Instabilität (daily ratings, dynamic complexity)
+   ===================================================================== */
+demos.krise=(function(){
+  const sec=$('#ex-krise'),cv=$('#c7'),ts=$('#t7'),setChip=chip($('#ch7')),ta=$('#k-items');
+  const P={days:120,cf:0.5,dest:0.85,hmax:0.45,a:1.6,nz:0.2,mn:0.2,ni:8,W:7,tempo:4,land:true,loop:true};
+  const HEAT=makeLUT([[0,[20,27,38]],[0.3,[78,48,128]],[0.62,[214,84,60]],[1,[255,216,110]]]);
+  ta.value='Item 1\nItem 2\nItem 3\nItem 4\n−Item 5\n−Item 6\n−Item 7\n−Item 8\nItem 9\n−Item 10';
+  let items=[],x=-1,xd=-1,day=0,prog=0,hx=[],hy=[],hd=[],pulses=[],trDay=-1,endT=0,cur={a:1.6,h:0};
+  function parseItems(){items=ta.value.split('\n').map(s=>s.trim()).filter(Boolean).slice(0,12).map((s,i)=>{const neg=/^[−–-]/.test(s);return {name:s.replace(/^[−–-]\s*/,''),sg:neg?-1:1,l:0.75+0.25*((i*0.618)%1),off:(((i*0.37)%1)-0.5)*1.2};});if(!items.length)items=[{name:'Item',sg:1,l:1,off:0}];}
+  function dcomp(win){const m=win.length,s=10;let F=0,k0=0;
+    for(let k=1;k<m;k++){const last=k===m-1,turn=!last&&((win[k]-win[k-1])*(win[k+1]-win[k])<0);if(turn||last){F+=Math.abs(win[k]-win[k0])/(k-k0);k0=k;}}
+    F/=s*(m-1);const so=win.slice().sort((a,b)=>a-b);let dev=0,mx=0;for(let i=0;i<m;i++){const id=i*s/(m-1);dev+=Math.abs(so[i]-id);mx+=Math.max(id,s-id);}
+    return F*(1-dev/mx);}
+  function dcRow(t){return items.map((_,j)=>{if(t<P.W-1)return 0;const win=[];for(let q=t-P.W+1;q<=t;q++)win.push(hy[q][j]);return dcomp(win);});}
+  function params(d){const c=P.cf*P.days,w=Math.max(4,P.days*0.12),u=(d-c)/w,bell=Math.exp(-u*u);let pb=0;for(const p of pulses)if(d>=p&&d<p+10)pb=1;
+    return {a:P.a*(1-P.dest*bell)*(1-0.6*pb),h:P.hmax*Math.tanh((d-c)/(w*0.6)),nz:P.nz*(1+2.5*P.dest*bell+2*pb)};}
+  function simDay(){const q=params(day);cur=q;
+    for(let k=0;k<40;k++)x+=(q.a*(x-x*x*x)+q.h)/40+q.nz*Math.sqrt(1/40)*gauss();
+    x=clamp(x,-2.2,2.2);hx.push(x);hy.push(items.map(it=>clamp(5+2.4*it.sg*it.l*x+it.off+P.mn*gauss(),0,10)));hd.push(dcRow(hy.length-1));
+    if(trDay<0&&hx.length>=8){let ok=true;for(let i=hx.length-7;i<hx.length;i++)if(hx[i]<0.3){ok=false;break;}if(ok)trDay=hx.length-7;}
+    day++;}
+  function restart(){parseItems();x=-1;xd=-1;day=0;prog=0;hx=[];hy=[];hd=[];pulses=[];trDay=-1;endT=0;cur=params(0);}
+  function step(dt){
+    if(day>=P.days){if(P.loop){endT+=dt;if(endT>3)restart();}return;}
+    prog+=dt*P.tempo;let n=0;while(prog>=1&&n<25&&day<P.days){prog-=1;simDay();n++;}
+    xd+=(x-xd)*(1-Math.exp(-dt*5));
+  }
+  function drawLand(ctx,x0,y0,W,H){
+    if(H<30)return;
+    const xs=-1.9,xe=1.9,Vlo=-1.3,Vhi=1.4,V=z=>cur.a*(z*z*z*z/4-z*z/2)-cur.h*z,PX=z=>x0+(z-xs)/(xe-xs)*W,PY=v=>y0+(1-(Math.max(v,Vlo)-Vlo)/(Vhi-Vlo))*H;
+    ctx.save();ctx.beginPath();ctx.rect(x0,y0,W,H);ctx.clip();
+    ctx.beginPath();for(let i=0;i<=120;i++){const z=xs+(xe-xs)*i/120;i?ctx.lineTo(PX(z),PY(V(z))):ctx.moveTo(PX(z),PY(V(z)));}
+    ctx.lineTo(PX(xe),y0+H);ctx.lineTo(PX(xs),y0+H);ctx.closePath();ctx.fillStyle=rgba(C.fg,0.05);ctx.fill();
+    ctx.beginPath();for(let i=0;i<=120;i++){const z=xs+(xe-xs)*i/120;i?ctx.lineTo(PX(z),PY(V(z))):ctx.moveTo(PX(z),PY(V(z)));}ctx.strokeStyle=rgba(C.fg,0.6);ctx.lineWidth=1.6;ctx.stroke();ctx.restore();
+    otext(ctx,'altes Muster',PX(-1),y0+H-8,C.a,'700 12px '+BODY,'center');otext(ctx,'neues Muster',PX(1),y0+H-8,C.b,'700 12px '+BODY,'center');
+    const z=clamp(xd,xs,xe);head(ctx,[PX(z),PY(V(z))-8],C.fg,7);
+  }
+  function draw(){
+    const {ctx,w,h}=fit(cv),pad=14,lw=Math.min(132,w*0.28),landTop=54,landB=P.land?Math.round(h*0.4):landTop-10;
+    if(P.land)drawLand(ctx,pad,landTop,w-2*pad,landB-landTop);
+    const shown=items.slice(0,P.ni),rows=shown.length+1,top=landB+26,gx=lw+pad,gw=w-gx-pad,cw=gw/P.days;
+    const rowH=Math.max(7,Math.min(24,(h-top-34)/(rows+0.3)));
+    for(let r=0;r<rows;r++){const isAll=r===shown.length,y=top+r*rowH+(isAll?6:0);
+      ctx.font=(isAll?'700 ':'400 ')+Math.min(12,rowH*0.8)+'px '+BODY;ctx.fillStyle=rgba(C.fg,isAll?0.95:0.75);ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(isAll?'alle Items':shown[r].name,gx-8,y+rowH/2,lw-12);
+      ctx.fillStyle=rgba(C.fg,0.04);ctx.fillRect(gx,y,gw,rowH-1);
+      for(let t=0;t<hd.length&&t<P.days;t++){let v;if(isAll){let s=0;for(let j=0;j<shown.length;j++)s+=hd[t][j]||0;v=s/Math.max(1,shown.length);}else v=hd[t][r]||0;
+        const k=clamp(Math.round(Math.pow(clamp(v/0.06,0,1),0.85)*255),0,255)*3;ctx.fillStyle='rgb('+HEAT[k]+','+HEAT[k+1]+','+HEAT[k+2]+')';ctx.fillRect(gx+t*cw,y,Math.ceil(cw),rowH-1);}}
+    const yEnd=top+rows*rowH+6,step=cw*10>36?10:cw*20>36?20:50;
+    for(let t=0;t<=P.days;t+=step){const xx=gx+t*cw;ctx.strokeStyle=rgba(C.fg,0.15);seg(ctx,[xx,yEnd],[xx,yEnd+4]);gtext(ctx,t===0?'Tag 0':String(t),xx,yEnd+12,C.muted,t===0?'left':'center');}
+    if(day>0&&day<P.days){const xx=gx+day*cw;ctx.strokeStyle=rgba(C.fg,0.6);ctx.lineWidth=1.5;seg(ctx,[xx,top-4],[xx,yEnd]);}
+    if(trDay>=0){const xx=gx+trDay*cw;ctx.setLineDash([4,3]);ctx.strokeStyle=rgb(C.fg);ctx.lineWidth=1.5;seg(ctx,[xx,top-4],[xx,yEnd]);ctx.setLineDash([]);otext(ctx,'Übergang',xx+4,top-24,C.fg,'700 11px '+BODY,'left');}
+    let m=0;if(hd.length){const rr=hd[hd.length-1];shown.forEach((_,j)=>m+=rr[j]||0);m/=Math.max(1,shown.length);}
+    const lvl=m<0.022?'ruhig':m<0.04?'erhöht':'kritisch',st=x<-0.3?['Altes Muster',C.a]:x>0.3?['Neues Muster',C.b]:['Dazwischen',C.e];
+    if(day>=P.days)setChip('Verlauf beendet',(trDay>=0?'Übergang ab Tag '+trDay:'kein Übergang')+(P.loop?' · startet gleich neu':''),C.muted);
+    else setChip(st[0],'Tag '+day+' von '+P.days+' · Schwankungen '+lvl,st[1]);
+    drawTS();
+  }
+  function drawTS(){
+    const {ctx,w,h}=fit(ts),F=tsBox(w,h,30,12,10,12),X=t=>F.L+t/Math.max(1,P.days-1)*F.pw,Y=v=>F.T+(1-v/10)*F.ph;
+    ctx.strokeStyle=rgba(C.fg,0.08);ctx.lineWidth=1;seg(ctx,[F.L,Y(5)],[F.L+F.pw,Y(5)]);
+    items.slice(0,P.ni).forEach((it,j)=>lineSeries(ctx,hy.map((r,t)=>[t,r[j]]),X,Y,rgba(it.sg>0?C.b:C.a,0.55),1.2));
+    if(trDay>=0){ctx.setLineDash([4,3]);ctx.strokeStyle=rgb(C.fg);ctx.lineWidth=1.2;seg(ctx,[X(trDay),F.T],[X(trDay),F.T+F.ph]);ctx.setLineDash([]);}
+    gtext(ctx,'10',F.L-6,Y(10)+4,C.muted);gtext(ctx,'0',F.L-6,Y(0)-4,C.muted);
+  }
+  const PRE={crit:{dest:0.85,hmax:0.45,a:1.6,nz:0.2},jump:{dest:0,hmax:0.75,a:1.6,nz:0.12},smooth:{dest:0,hmax:0.35,a:0.35,nz:0.15},instab:{dest:0.85,hmax:0,a:1.6,nz:0.2},stable:{dest:0,hmax:0,a:1.6,nz:0.2}};
+  const refresh=bindPanel(sec,P,k=>{if(k==='W')hd=hy.map((_,t)=>dcRow(t));});
+  $$('[data-preset]',sec).forEach(b=>b.addEventListener('click',()=>{Object.assign(P,PRE[b.dataset.preset]);refresh();restart();}));
+  $('#k-pulse').addEventListener('click',()=>{if(day<P.days)pulses.push(day);});
+  $('#k-apply').addEventListener('click',restart);
+  restart();
+  return {paused:reduceMotion,step,draw,reset:restart};
+})();
+
+/* ---------- shell: tabs, loop, keys, fullscreen, hover help ---------- */
+const ids=['lorenz','krise'];
+let active='lorenz';
+function show(id){if(!demos[id])id='lorenz';active=id;ids.forEach(k=>{$('#ex-'+k).hidden=k!==id;const t=$('#tab-'+k);t.setAttribute('aria-selected',String(k===id));t.tabIndex=k===id?0:-1;});}
+function go(id){show(id);try{if(location.hash!=='#'+id)location.hash=id;}catch(e){}}
+$$('.tab').forEach((t,i,all)=>{t.addEventListener('click',()=>{hideTip();go(t.dataset.target);});t.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const nx=all[(i+1)%all.length];nx.focus();go(nx.dataset.target);}});});
+window.addEventListener('hashchange',()=>show((location.hash||'').slice(1)));
+function refreshPause(){ids.forEach(k=>{$('#ex-'+k+' [data-act=pause]').textContent=demos[k].paused?'Weiter':'Pause';});}
+ids.forEach(k=>{const sec=$('#ex-'+k);sec.querySelector('[data-act=pause]').addEventListener('click',()=>{demos[k].paused=!demos[k].paused;refreshPause();});sec.querySelector('[data-act=fs]').addEventListener('click',()=>toggleFS(sec));sec.querySelector('[data-act=reset]').addEventListener('click',()=>demos[k].reset());});
+refreshPause();
+const fsOK=!!(document.fullscreenEnabled||document.webkitFullscreenEnabled);if(!fsOK)$$('[data-act=fs]').forEach(b=>b.hidden=true);
+const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement||null;
+function toggleFS(el){if(fsEl()){const ex=document.exitFullscreen||document.webkitExitFullscreen;if(ex){try{const p=ex.call(document);if(p&&p.catch)p.catch(()=>{});}catch(e){}}return;}const req=el.requestFullscreen||el.webkitRequestFullscreen;if(!req)return;try{const p=req.call(el);if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+function onFS(){const f=fsEl();$$('.exhibit').forEach(s=>s.classList.toggle('is-fs',s===f));$$('[data-act=fs]').forEach(b=>b.textContent=f?'Vollbild beenden':'Vollbild');}
+document.addEventListener('fullscreenchange',onFS);document.addEventListener('webkitfullscreenchange',onFS);
+document.addEventListener('keydown',e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey)return;const tg=e.target;if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.tagName==='SELECT'||tg.isContentEditable))return;
+  if(e.key==='Escape')hideTip();
+  if(e.key==='1'||e.key==='2'){go(ids[+e.key-1]);return;}
+  if(e.key===' '&&!(tg&&(tg.tagName==='BUTTON'||tg.tagName==='SUMMARY'))){e.preventDefault();demos[active].paused=!demos[active].paused;refreshPause();return;}
+  if(e.key==='f'||e.key==='F'){if(fsOK)toggleFS($('#ex-'+active));return;}
+  if(e.key==='r'||e.key==='R')demos[active].reset();
+});
+let last=performance.now();
+function frame(now){const dt=Math.min(0.05,Math.max(0,(now-last)/1000));last=now;const d=demos[active];try{if(!d.paused)d.step(dt);d.draw();}catch(err){console.error(err);}requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+
+const tipEl=document.createElement('div');tipEl.className='tip';tipEl.setAttribute('role','tooltip');tipEl.hidden=true;document.body.appendChild(tipEl);
+let tipT=0;
+function showTip(el){const t=el.dataset.tip;if(!t)return;const host=fsEl()||document.body;if(tipEl.parentNode!==host)host.appendChild(tipEl);tipEl.textContent=t;tipEl.hidden=false;
+  const r=el.getBoundingClientRect(),tw=tipEl.offsetWidth,th=tipEl.offsetHeight,vw=window.innerWidth,vh=window.innerHeight;let x,y;
+  if(r.left>tw+24){x=r.left-tw-12;y=r.top;}else{x=r.left;y=r.bottom+6;if(y+th>vh-8)y=r.top-th-6;}
+  tipEl.style.left=clamp(x,8,Math.max(8,vw-tw-8))+'px';tipEl.style.top=clamp(y,8,Math.max(8,vh-th-8))+'px';}
+function hideTip(){tipEl.hidden=true;}
+$$('[data-tip]').forEach(el=>{
+  el.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')showTip(el);});
+  el.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')hideTip();});
+  el.addEventListener('focusin',()=>showTip(el));el.addEventListener('focusout',hideTip);
+  el.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'){showTip(el);clearTimeout(tipT);tipT=setTimeout(hideTip,3500);}});
+});
+window.addEventListener('scroll',hideTip,{passive:true});
+show((location.hash||'').slice(1));
+})();
+</script>
+
+</body></html>
