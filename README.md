@@ -11,7 +11,33 @@ Interaktive Simulationen zu Selbstorganisation in psychischen Systemen – eine 
 
 Jeder Regler erklärt sich beim Überfahren mit der Maus.
 
-**Tastatur:** `1`/`2` Tab wechseln · `Leertaste` Pause · `F` Vollbild · `C` Regler im Vollbild ein-/ausblenden · `R` neu starten
+## Tastenkürzel (zum Präsentieren im Vollbild)
+
+`?` oder `H` blendet die Übersicht im Bild ein. Jede Änderung per Taste erscheint kurz als kleine Anzeige direkt im Bild.
+
+**Lorenz-Attraktor**
+
+| Taste | Wirkung |
+|---|---|
+| `←` / `→` | Muster A / B wählen (nochmal drücken oder `Esc`: abwählen) |
+| `↑` / `↓` | Anziehungskraft des gewählten Musters ±0,05 (mit `Shift` ±0,01) |
+| `Bild↑` / `Bild↓` | ebenso – funktioniert mit Präsentations-Clickern |
+| `A` / `B` | Muster ein- / ausblenden (eines bleibt immer sichtbar) |
+| `Shift` + `←` / `→` | Anstoß zu A / B |
+| `+` / `−` | Unruhe |
+| `L` | Stärke-Balken unter den Mustern |
+
+**Kritische Instabilität**
+
+| Taste | Wirkung |
+|---|---|
+| `↑` / `↓`, `Bild↑` / `Bild↓` | Destabilisierung |
+| `←` / `→` | Zug zum neuen Muster |
+| `D` | Jetzt destabilisieren (10 Tage) |
+| `Shift` + `1`…`5` | Verläufe (Voreinstellungen) |
+| `+` / `−` | Grundunruhe |
+
+**Überall:** `1`/`2` Simulation wechseln · `Leertaste` Pause · `R` neu starten · `F` Vollbild · `C` Regler im Vollbild anheften
 
 ## Lokal starten
 

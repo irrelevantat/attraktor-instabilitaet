@@ -132,6 +132,13 @@ details.sub[open]>summary{margin-bottom:10px}
 .exhibit.is-fs .edge:hover::after{background:var(--muted)}
 .exhibit.is-fs .panel{position:absolute;z-index:6;top:16px;bottom:16px;right:max(16px,env(safe-area-inset-right,0px));width:250px;zoom:.9;gap:12px;overflow:auto;padding:12px 12px 14px;background:rgba(17,25,35,.94);border:1px solid var(--line);border-radius:8px;box-shadow:-12px 0 40px rgba(0,0,0,.45);transform:translateX(calc(100% + 40px));opacity:0;transition:transform .38s cubic-bezier(.2,.8,.2,1),opacity .28s ease}
 .exhibit.is-fs .panel .grp{gap:9px;padding-bottom:12px}
+/* hotkey cheat sheet, shown with "?" over the stage (works in fullscreen) */
+kbd{font-family:var(--f-mono);font-size:.74rem;padding:1px 5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;background:var(--raise);color:var(--fg);white-space:nowrap}
+.keys{position:absolute;left:12px;bottom:12px;z-index:4;max-width:calc(100% - 24px);max-height:calc(100% - 70px);overflow:auto;background:rgba(17,25,35,.95);border:1px solid var(--line);border-radius:8px;padding:12px 14px;box-shadow:0 10px 32px rgba(0,0,0,.45);font-size:.82rem}
+.keys h4{margin:0 0 8px;font-family:var(--f-mono);font-size:.7rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.keys dl{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:0;align-items:baseline}
+.keys dt{white-space:nowrap}
+.keys dd{margin:0;color:var(--fg)}
 .exhibit.is-fs .edge:hover+.panel,.exhibit.is-fs .panel:hover,.exhibit.is-fs .panel.held,.exhibit.is-fs .panel:has(:focus-visible),.exhibit.is-fs:not(.no-panel) .panel{transform:none;opacity:1}
 .disclaimer{margin:0;font-size:.78rem;color:var(--muted)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
@@ -158,7 +165,7 @@ details.sub[open]>summary{margin-bottom:10px}
     </div>
     <aside class="panel">
       <div class="grp"><h3>Ablauf</h3>
-        <div class="seg" data-seg="stage"><button type="button" data-v="a" data-tip="Nur Muster A: Der Zustand bleibt in A und kreist dort. So lässt sich zuerst dieses eine Muster erklären.">1 · Muster A</button><button type="button" data-v="both" data-tip="Gibt die Bewegung frei. Der Zustand verlässt A, wechselt zwischen A und B, und das ganze Muster entsteht.">2 · Beide Muster</button></div>
+        <div class="seg" data-seg="stage"><button type="button" data-v="a" data-tip="Nur Muster A: Der Zustand bleibt in A und kreist dort. So lässt sich zuerst dieses eine Muster erklären. Taste B blendet B ein und aus.">Nur A</button><button type="button" data-v="both" data-tip="Gibt die Bewegung frei. Der Zustand verlässt A, wechselt zwischen A und B, und das ganze Muster entsteht.">A + B</button><button type="button" data-v="b" data-tip="Nur Muster B: Der Zustand bleibt in B und kreist dort. Taste A blendet A ein und aus.">Nur B</button></div>
       </div>
       <div class="grp"><h3>Muster A</h3>
         <div class="ctl" data-tip="Name von Muster A. Er erscheint im Bild am Muster."><label for="l-nA">Name</label><input type="text" id="l-nA" data-t="nA"></div>
@@ -177,12 +184,14 @@ details.sub[open]>summary{margin-bottom:10px}
         <div class="ctl" data-tip="Wie viele Sekunden der zurückgelegten Bahn sichtbar bleiben."><div class="ctl-row"><label for="l-trail">Spur</label><output for="l-trail"></output></div><input type="range" id="l-trail" data-k="trail" min="2" max="40" step="1" data-d="0" data-u=" s"></div>
         <label class="switch" for="l-lab" data-tip="Namen der Muster im Bild ein- oder ausblenden."><span class="lbl">Beschriftung</span><input type="checkbox" id="l-lab" data-c="labels"></label>
         <label class="switch" for="l-ax" data-tip="Die drei Achsen des Raums ein- oder ausblenden."><span class="lbl">Achsen</span><input type="checkbox" id="l-ax" data-c="axes"></label>
+        <label class="switch" for="l-met" data-tip="Zeigt unter jedem Muster einen Balken mit seiner Anziehungskraft. Taste L."><span class="lbl">Stärke-Balken</span><input type="checkbox" id="l-met" data-c="meters"></label>
         <label class="switch" for="l-rot" data-tip="Dreht den Raum langsam. Mit Ziehen lässt er sich auch von Hand drehen."><span class="lbl">Langsam drehen</span><input type="checkbox" id="l-rot" data-c="rot"></label>
         <details class="sub"><summary data-tip="Bezeichnungen an beiden Enden jeder Achse.">Achsen beschriften</summary>
           <div class="pairs"><input type="text" aria-label="Achse 1 links" data-t="x0"><input type="text" aria-label="Achse 1 rechts" data-t="x1"><input type="text" aria-label="Achse 2 unten" data-t="y0"><input type="text" aria-label="Achse 2 oben" data-t="y1"><input type="text" aria-label="Achse 3 vorn" data-t="z0"><input type="text" aria-label="Achse 3 hinten" data-t="z1"></div>
         </details>
       </div>
-      <button class="btn" data-act="reset" type="button" data-tip="Setzt den Zustand zurück in Muster A.">Neu starten</button>
+      <button class="btn" data-act="reset" type="button" data-tip="Setzt den Zustand zurück in das sichtbare Muster.">Neu starten</button>
+      <p class="hint">Tastenkürzel: <kbd>?</kbd></p>
     </aside>
   </section>
 
@@ -226,6 +235,7 @@ details.sub[open]>summary{margin-bottom:10px}
         <label class="switch" for="k-loop" data-tip="Startet nach dem letzten Tag automatisch einen neuen Verlauf."><span class="lbl">Am Ende neu starten</span><input type="checkbox" id="k-loop" data-c="loop"></label>
       </div>
       <button class="btn" data-act="reset" type="button" data-tip="Beginnt einen neuen Verlauf ab Tag 0.">Neu starten</button>
+      <p class="hint">Tastenkürzel: <kbd>?</kbd></p>
     </aside>
   </section>
 </div>
@@ -312,6 +322,32 @@ function wingLabels(ctx,cam,map,rho,beta,nA,nB,W){
 
 const demos={};
 
+/* on-screen display for hotkeys: a small box near what changed, fades out after ~1.8 s.
+   show(anchor,title,val,max,col) draws a 10-segment bar; val=null shows only the title. */
+function makeOSD(){
+  let o=null;
+  function rr(ctx,x,y,w,h,r){ctx.beginPath();if(ctx.roundRect)ctx.roundRect(x,y,w,h,r);else ctx.rect(x,y,w,h);}
+  return {
+    get anchor(){return o&&o.anchor;},
+    show(anchor,title,val,max,col,txt){o={anchor,title,val,max,col:col||C.fg,txt,t:performance.now()};},
+    draw(ctx,cx,y,W,H){
+      if(!o)return;const age=(performance.now()-o.t)/1000;if(age>1.8){o=null;return;}
+      const a=age<1.3?1:1-(age-1.3)/0.5,bar=o.val!=null,N=10,sw=12,gp=3,bw=N*(sw+gp)-gp;
+      ctx.save();ctx.globalAlpha=a;ctx.font='700 13px '+BODY;
+      const vt=bar?(o.txt||fmt(o.val,2)):'';const tw=ctx.measureText(o.title).width;ctx.font='500 13px '+MONO;const vw=ctx.measureText(vt).width;
+      const w=Math.max(tw,bar?bw+10+vw:0)+24,h=bar?54:34,x=clamp(cx-w/2,8,Math.max(8,W-w-8)),yy=clamp(y,8,Math.max(8,H-h-8));
+      rr(ctx,x,yy,w,h,6);ctx.fillStyle=rgba(C.surface,0.94);ctx.fill();ctx.lineWidth=1.2;ctx.strokeStyle=rgba(o.col,0.7);ctx.stroke();
+      ctx.font='700 13px '+BODY;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillStyle=rgb(o.col);ctx.fillText(o.title,x+12,yy+17);
+      if(bar){const f=clamp(o.val/o.max,0,1)*N,by=yy+33;
+        for(let i=0;i<N;i++){const p=clamp(f-i,0,1);rr(ctx,x+12+i*(sw+gp),by,sw,10,2);ctx.fillStyle=rgba(C.fg,0.12);ctx.fill();if(p>0){rr(ctx,x+12+i*(sw+gp),by,sw*p,10,2);ctx.fillStyle=rgb(o.col);ctx.fill();}}
+        ctx.font='500 13px '+MONO;ctx.fillStyle=rgb(C.fg);ctx.fillText(vt,x+12+bw+10,by+5);}
+      ctx.restore();
+    }
+  };
+}
+/* step a numeric parameter from the keyboard; Shift = fine step */
+function nudge(P,k,dir,e,coarse,fine,lo,hi){const st=e.shiftKey?fine:coarse;P[k]=+clamp(Math.round((P[k]+dir*st)/fine)*fine,lo,hi).toFixed(4);}
+
 /* ---------- helpers for the newer simulations ---------- */
 function makeLUT(stops){const t=new Uint8ClampedArray(768);for(let i=0;i<256;i++){const x=i/255;let k=0;while(k<stops.length-2&&x>stops[k+1][0])k++;const a=stops[k],b=stops[k+1],f=clamp((x-a[0])/(b[0]-a[0]),0,1);for(let j=0;j<3;j++)t[i*3+j]=a[1][j]+(b[1][j]-a[1][j])*f;}return t;}
 function makeFFT(n){const lev=Math.round(Math.log2(n)),rev=new Uint32Array(n),co=new Float64Array(n/2),si=new Float64Array(n/2);
@@ -341,38 +377,47 @@ function legendRow(ctx,items,x,y,maxW){let cx=x,cy=y;ctx.font='500 11px '+MONO;c
    ===================================================================== */
 demos.lorenz=(function(){
   const sec=$('#ex-lorenz'),cv=$('#c1'),ts=$('#t1'),setChip=chip($('#ch1'));
-  const P={stage:'a',aA:0.9,aB:0.3,nz:1,tempo:0.3,trail:15,labels:true,axes:true,rot:false,
+  const P={stage:'a',aA:0.9,aB:0.3,nz:1,tempo:0.3,trail:15,labels:true,axes:true,rot:false,meters:false,
     nA:'',nB:'',x0:'',x1:'',y0:'',y1:'',z0:'',z1:''};
   const SG=10,BE=8/3,DT=0.004,drive=a=>44-20*a;
-  const tA=()=>P.stage==='a'?Math.max(26.5,drive(P.aA)):drive(P.aA),tB=()=>drive(P.aB),tW=()=>P.stage==='a'?1:0;
+  /* stage: 'a' = only A (a soft wall keeps the state on the A side), 'b' = only B (mirrored wall), 'both' = free */
+  const tA=()=>P.stage==='a'?Math.max(26.5,drive(P.aA)):drive(P.aA),tB=()=>P.stage==='b'?Math.max(26.5,drive(P.aB)):drive(P.aB),tWA=()=>P.stage==='a'?1:0,tWB=()=>P.stage==='b'?1:0;
+  const osd=makeOSD(),labPos={a:null,b:null};let sel=null;/* selected pattern for ↑/↓; null = none */
   const TAU=0.08,GN=1.6/Math.sqrt(2*TAU),sp=v=>v>30?v:Math.log1p(Math.exp(v)),eta=[0,0,0];
   const LR=[26.5,28,30,32,35,38,41,44],LX=[-7.25,-7.05,-6.88,-6.72,-6.41,-6.09,-5.75,-5.39],LY=[-7.01,-6.49,-5.81,-5.02,-3.58,-1.92,-0.12,1.79],LZ=[23.72,24.29,25.12,25.85,26.76,27.46,28.01,28.49],LS=[8.64,10.72,12.97,15.09,18.11,20.97,23.65,26.11];
   const lut=(T,r)=>{r=clamp(r,LR[0],LR[7]);let i=0;while(i<6&&r>LR[i+1])i++;const u=(r-LR[i])/(LR[i+1]-LR[i]);return T[i]+(T[i+1]-T[i])*u;};
-  const Q={rA:tA(),rB:tB(),nz:P.nz,wall:tW()},Z={sc:lut(LS,Q.rA)*1.25,cz:lut(LZ,Q.rA),ox:lut(LX,Q.rA),oy:lut(LY,Q.rA)};
+  const Q={rA:tA(),rB:tB(),nz:P.nz,wA:tWA(),wB:tWB()},Z={sc:lut(LS,Q.rA)*1.25,cz:lut(LZ,Q.rA),ox:lut(LX,Q.rA),oy:lut(LY,Q.rA)};
   let s=[0,0,0],pts=[],hist=[],wt=0,acc=0,samp=0,kick=0,kickDir=0;
   const cam=makeCam({yaw:-0.6,pitch:0.22,D:7});dragRotate(cv,cam);
-  const f=(x,o)=>{const w=1/(1+Math.exp(-x[0]/1.5)),r=Q.rA*(1-w)+Q.rB*w;o[0]=SG*(x[1]-x[0])-(Q.wall>1e-3?Q.wall*70*sp((x[0]+2)/0.7):0);o[1]=x[0]*(r-x[2])-x[1];o[2]=x[0]*x[1]-BE*x[2];};
-  function reset(){Q.rA=tA();Q.rB=tB();Q.nz=P.nz;const w0=tW();Q.wall=1;const q=Math.sqrt(BE*(Q.rA-1));s=[-q+2,-q,Q.rA-1];eta.fill(0);
-    for(let i=0;i<15000;i++)rk4(s,DT,f);Q.wall=w0;pts=[];hist=[];}
+  const f=(x,o)=>{const w=1/(1+Math.exp(-x[0]/1.5)),r=Q.rA*(1-w)+Q.rB*w;o[0]=SG*(x[1]-x[0])-(Q.wA>1e-3?Q.wA*70*sp((x[0]+2)/0.7):0)+(Q.wB>1e-3?Q.wB*70*sp((2-x[0])/0.7):0);o[1]=x[0]*(r-x[2])-x[1];o[2]=x[0]*x[1]-BE*x[2];};
+  function reset(){Q.rA=tA();Q.rB=tB();Q.nz=P.nz;const inB=P.stage==='b',wa=tWA(),wb=tWB();Q.wA=inB?0:1;Q.wB=inB?1:0;
+    const r=inB?Q.rB:Q.rA,sg=inB?1:-1,q=Math.sqrt(BE*(r-1));s=[sg*q-sg*2,sg*q,r-1];eta.fill(0);
+    for(let i=0;i<15000;i++)rk4(s,DT,f);Q.wA=wa;Q.wB=wb;pts=[];hist=[];}
   function step(dt){
     wt+=dt;if(P.rot&&!cam.dragging)cam.yaw+=dt*0.08;
-    const k=1-Math.exp(-dt/1.5);Q.rA+=(tA()-Q.rA)*k;Q.rB+=(tB()-Q.rB)*k;Q.nz+=(P.nz-Q.nz)*k;Q.wall+=(tW()-Q.wall)*k;
+    const k=1-Math.exp(-dt/1.5);Q.rA+=(tA()-Q.rA)*k;Q.rB+=(tB()-Q.rB)*k;Q.nz+=(P.nz-Q.nz)*k;Q.wA+=(tWA()-Q.wA)*k;Q.wB+=(tWB()-Q.wB)*k;
     acc+=dt*P.tempo;let n=0;
     while(acc>=DT&&n<400){acc-=DT;n++;rk4(s,DT,f);const g=Q.nz*GN*DT,c=Math.sqrt(2*DT/TAU);for(let i=0;i<3;i++){eta[i]+=-eta[i]*DT/TAU+c*gauss();s[i]+=g*eta[i];}if(kick>0){s[0]+=kickDir*45*DT;kick-=DT;}}
     samp+=dt;while(samp>=1/30){samp-=1/30;pts.push({t:wt,s:s.slice()});hist.push({t:wt,x:s[0]});}
     while(pts.length&&pts[0].t<wt-P.trail)pts.shift();while(hist.length&&hist[0].t<wt-60)hist.shift();
   }
+  /* pattern centres, labels, selection ring and strength meters; remembers where each label sits for the OSD */
   function labels(ctx,map,W,ly){
-    const L=[[-Math.sqrt(BE*Math.max(Q.rA-1,0.1)),Q.rA-1,'Muster A',P.nA,C.a,P.stage==='a'?0:-36,ly]];
-    if(P.stage!=='a')L.push([Math.sqrt(BE*Math.max(Q.rB-1,0.1)),Q.rB-1,'Muster B',P.nB,C.b,36,1]);
-    for(const [v,z,t,n,c,ox,yy] of L){const m=map([v,v,z]),fp=proj(cam,m[0],m[1],m[2]),p=proj(cam,m[0],yy,m[2]);
-      ctx.beginPath();ctx.arc(fp[0],fp[1],4,0,Math.PI*2);ctx.strokeStyle=rgba(c,0.55);ctx.lineWidth=1.5;ctx.stroke();
-      otext(ctx,t,p[0]+ox,p[1],c,'700 14px '+BODY,'center',W);if(n)otext(ctx,n,p[0]+ox,p[1]+17,rgba(C.fg,0.85),'400 13px '+BODY,'center',W);}
+    const one=P.stage!=='both',L=[];labPos.a=labPos.b=null;
+    if(P.stage!=='b')L.push(['a',-Math.sqrt(BE*Math.max(Q.rA-1,0.1)),Q.rA-1,'Muster A',P.nA,C.a,one?0:-36,one?ly:1,P.aA]);
+    if(P.stage!=='a')L.push(['b',Math.sqrt(BE*Math.max(Q.rB-1,0.1)),Q.rB-1,'Muster B',P.nB,C.b,one?0:36,one?ly:1,P.aB]);
+    for(const [key,v,z,t,n,c,ox,yy,str] of L){const m=map([v,v,z]),fp=proj(cam,m[0],m[1],m[2]),p=proj(cam,m[0],yy,m[2]),lx=clamp(p[0]+ox,40,W-40);
+      if(P.labels){ctx.beginPath();ctx.arc(fp[0],fp[1],4,0,Math.PI*2);ctx.strokeStyle=rgba(c,0.55);ctx.lineWidth=1.5;ctx.stroke();}
+      if(key===sel){ctx.beginPath();ctx.arc(fp[0],fp[1],11,0,Math.PI*2);ctx.strokeStyle=rgba(c,0.9);ctx.lineWidth=2.5;ctx.stroke();}
+      let by=p[1]+(n&&P.labels?32:16);
+      if(P.labels){otext(ctx,t,p[0]+ox,p[1],c,'700 14px '+BODY,'center',W);if(n)otext(ctx,n,p[0]+ox,p[1]+17,rgba(C.fg,0.85),'400 13px '+BODY,'center',W);}else by=p[1];
+      if(P.meters){const bw=72,bx=lx-bw/2;ctx.fillStyle=rgba(C.fg,0.14);ctx.fillRect(bx,by-2,bw,4);ctx.fillStyle=rgb(c);ctx.fillRect(bx,by-2,bw*clamp(str,0,1),4);by+=8;}
+      labPos[key]=[lx,by+6];}
   }
   function draw(){
-    let labTop=1;const {ctx,w,h}=fit(cv),big=Math.max(Q.rA,Q.rB),one=P.stage==='a';
+    let labTop=1;const {ctx,w,h}=fit(cv),big=Math.max(Q.rA,Q.rB),one=P.stage!=='both';
     let scT=Math.max(8,24*Math.max(Math.sqrt(big/28),big/28*0.9)),czT=(big-1)*0.85,oxT=0,oyT=0;
-    if(one){scT=lut(LS,Q.rA)*1.75;czT=lut(LZ,Q.rA);oxT=lut(LX,Q.rA);oyT=lut(LY,Q.rA);
+    if(one){const r1=P.stage==='b'?Q.rB:Q.rA,mr=P.stage==='b'?-1:1;scT=lut(LS,r1)*1.75;czT=lut(LZ,r1);oxT=mr*lut(LX,r1);oyT=mr*lut(LY,r1);
       const R=pts.filter(o=>o.t>wt-Math.min(P.trail,10));if(R.length>40){let a=0,b=0,c=0,v=0;for(const o of R){a+=o.s[0];b+=o.s[1];c+=o.s[2];}a/=R.length;b/=R.length;c/=R.length;
         for(const o of R)v+=(o.s[0]-a)**2+(o.s[1]-b)**2+(o.s[2]-c)**2;scT=Math.max(6,Math.sqrt(v/R.length)*1.75);oxT=a;oyT=b;czT=c;}
       let top=-1e9;for(const o of R)top=Math.max(top,o.s[2]);labTop=R.length?Math.min(1.06,(top-Z.cz)/Z.sc+0.16):1;}else labTop=1;
@@ -380,10 +425,11 @@ demos.lorenz=(function(){
     const map=x=>[(x[0]-Z.ox)/Z.sc,(x[2]-Z.cz)/Z.sc,(x[1]-Z.oy)/Z.sc];
     cam.scale=Math.min(w/2.6,h/2.35);cam.cx=w/2;cam.cy=h*0.55;cam.update();
     if(P.axes)drawAxes(ctx,cam,{x:[P.x0,P.x1],y:[P.y0,P.y1],z:[P.z0,P.z1]},w);
-    if(P.labels)labels(ctx,map,w,labTop);
+    labels(ctx,map,w,labTop);
     drawTrail(ctx,cam,pts,map,wt,P.trail,o=>o.s[0]<0?C.a:C.b,2,0.9);
     const m=map(s);head(ctx,proj(cam,m[0],m[1],m[2]),C.fg,5.5);
     const inA=s[0]<0;setChip(inA?'Muster A':'Muster B',inA?P.nA:P.nB,inA?C.a:C.b);
+    const an=osd.anchor,ap=(an==='a'||an==='b')&&labPos[an];osd.draw(ctx,ap?ap[0]:w/2,ap?ap[1]:h-70,w,h);
     drawTS();
   }
   function drawTS(){
@@ -395,10 +441,32 @@ demos.lorenz=(function(){
     gtext(ctx,'B',F.L-10,F.T+6,C.b);gtext(ctx,'A',F.L-10,F.T+F.ph-6,C.a);
     if(hist.length>30){let a=0;hist.forEach(o=>{if(o.x<0)a++;});const pa=Math.round(a/hist.length*100);gtext(ctx,'letzte '+Math.round(Math.min(60,wt))+' s: A '+pa+' % · B '+(100-pa)+' %',F.L+F.pw,F.T-6,C.muted,'right');}
   }
-  bindPanel(sec,P,null);
+  const refresh=bindPanel(sec,P,null);
   $$('[data-kick]',sec).forEach(b=>b.addEventListener('click',()=>{kickDir=+b.dataset.kick;kick=0.25;}));
+  const NM={a:'Muster A',b:'Muster B'},COL={a:C.a,b:C.b},vis=k=>P.stage==='both'||P.stage===k;
+  const showStr=k=>osd.show(k,NM[k]+' · Anziehungskraft'+(vis(k)?'':' (ausgeblendet)'),P[k==='a'?'aA':'aB'],1,COL[k]);
+  /* hotkeys: ←/→ pick a pattern (A is left, B is right), ↑/↓ or PageUp/PageDown change its attraction,
+     A/B show or hide a pattern, Shift+←/→ push toward that side, +/− change Unruhe, L toggles the strength meters */
+  function key(e){
+    const k=e.key,lk=k.length===1?k.toLowerCase():k;
+    if((k==='ArrowLeft'||k==='ArrowRight')&&e.shiftKey){const d=k==='ArrowLeft'?-1:1;kickDir=d;kick=0.25;osd.show(d<0?'a':'b','Anstoß zu '+(d<0?'A':'B'),null,1,d<0?C.a:C.b);return true;}
+    if(k==='ArrowLeft'||k==='ArrowRight'){const t=k==='ArrowLeft'?'a':'b';
+      if(sel===t){sel=null;osd.show(t,NM[t]+' abgewählt',null,1,C.muted);}else{sel=t;showStr(t);}return true;}
+    if(k==='Escape'&&sel){const t=sel;sel=null;osd.show(t,NM[t]+' abgewählt',null,1,C.muted);return false;}
+    if(k==='ArrowUp'||k==='ArrowDown'||k==='PageUp'||k==='PageDown'){
+      if(!sel){osd.show('top','Zuerst Muster wählen: ← oder →',null,1,C.fg);return true;}
+      nudge(P,sel==='a'?'aA':'aB',(k==='ArrowUp'||k==='PageUp')?1:-1,e,0.05,0.01,0,1);refresh();showStr(sel);return true;}
+    if(lk==='a'||lk==='b'){const other=lk==='a'?'b':'a';
+      if(P.stage==='both')P.stage=other;else if(P.stage===other)P.stage='both';
+      else{osd.show(lk,'Ein Muster bleibt immer sichtbar',null,1,COL[lk]);return true;}
+      refresh();osd.show(lk,NM[lk]+(vis(lk)?' eingeblendet':' ausgeblendet'),null,1,COL[lk]);return true;}
+    if(k==='+'||k==='-'||k==='−'){nudge(P,'nz',k==='+'?1:-1,e,0.1,0.05,0,3);refresh();osd.show('bottom','Unruhe',P.nz,3,C.fg);return true;}
+    if(lk==='l'){P.meters=!P.meters;refresh();osd.show('top','Stärke-Balken '+(P.meters?'an':'aus'),null,1,C.fg);return true;}
+    return false;
+  }
+  const keys=[['← →','Muster A / B wählen (nochmal drücken oder Esc: abwählen)'],['↑ ↓','Anziehungskraft ändern (mit Shift fein)'],['Bild↑ Bild↓','ebenso, z. B. mit Präsentations-Clicker'],['A · B','Muster ein- / ausblenden'],['Shift + ← →','Anstoß zu A / B'],['+ −','Unruhe'],['L','Stärke-Balken']];
   reset();
-  return {paused:reduceMotion,step,draw,reset};
+  return {paused:reduceMotion,step,draw,reset,key,keys};
 })();
 
 /* =====================================================================
@@ -457,6 +525,7 @@ demos.krise=(function(){
     const lvl=m<0.022?'ruhig':m<0.04?'erhöht':'kritisch',st=x<-0.3?['Altes Muster',C.a]:x>0.3?['Neues Muster',C.b]:['Dazwischen',C.e];
     if(day>=P.days)setChip('Verlauf beendet',(trDay>=0?'Übergang ab Tag '+trDay:'kein Übergang')+(P.loop?' · startet gleich neu':''),C.muted);
     else setChip(st[0],'Tag '+day+' von '+P.days+' · Schwankungen '+lvl,st[1]);
+    osd.draw(ctx,w/2,58,w,h);
     drawTS();
   }
   function drawTS(){
@@ -471,8 +540,20 @@ demos.krise=(function(){
   $$('[data-preset]',sec).forEach(b=>b.addEventListener('click',()=>{Object.assign(P,PRE[b.dataset.preset]);refresh();restart();}));
   $('#k-pulse').addEventListener('click',()=>{if(day<P.days)pulses.push(day);});
   $('#k-apply').addEventListener('click',restart);
+  const osd=makeOSD(),PK=['crit','jump','smooth','instab','stable'],PN=PK.map(p=>$('[data-preset='+p+']',sec).textContent);
+  /* hotkeys: ↑/↓ Destabilisierung, ←/→ Zug zum neuen Muster (old ← → new), D pulse, Shift+1…5 presets, +/− Grundunruhe */
+  function key(e){
+    const k=e.key;
+    if(k==='ArrowUp'||k==='ArrowDown'||k==='PageUp'||k==='PageDown'){nudge(P,'dest',(k==='ArrowUp'||k==='PageUp')?1:-1,e,0.05,0.01,0,1);refresh();osd.show('top','Destabilisierung',P.dest,1,C.e);return true;}
+    if(k==='ArrowLeft'||k==='ArrowRight'){nudge(P,'hmax',k==='ArrowRight'?1:-1,e,0.05,0.01,0,0.8);refresh();osd.show('top','Zug zum neuen Muster',P.hmax,0.8,C.b);return true;}
+    if(k==='d'||k==='D'){if(day<P.days){pulses.push(day);osd.show('top','Destabilisierung ab Tag '+day+' für 10 Tage',null,1,C.e);}return true;}
+    const dm=/^Digit([1-5])$/.exec(e.code||'');if(e.shiftKey&&dm){const p=PK[+dm[1]-1];Object.assign(P,PRE[p]);refresh();restart();osd.show('top',PN[+dm[1]-1],null,1,C.fg);return true;}
+    if(k==='+'||k==='-'||k==='−'){nudge(P,'nz',k==='+'?1:-1,e,0.02,0.01,0,0.5);refresh();osd.show('top','Grundunruhe',P.nz,0.5,C.fg);return true;}
+    return false;
+  }
+  const keys=[['↑ ↓','Destabilisierung (mit Shift fein)'],['Bild↑ Bild↓','ebenso, z. B. mit Präsentations-Clicker'],['← →','Zug zum neuen Muster'],['D','Jetzt destabilisieren (10 Tage)'],['Shift + 1 … 5','Verläufe: '+PN.map((n,i)=>(i+1)+' '+n).join(' · ')],['+ −','Grundunruhe']];
   restart();
-  return {paused:reduceMotion,step,draw,reset:restart};
+  return {paused:reduceMotion,step,draw,reset:restart,key,keys};
 })();
 
 /* ---------- shell: tabs, loop, keys, fullscreen, hover help ---------- */
@@ -489,14 +570,23 @@ const fsOK=!!(document.fullscreenEnabled||document.webkitFullscreenEnabled);if(!
 const fsEl=()=>document.fullscreenElement||document.webkitFullscreenElement||null;
 function toggleFS(el){if(fsEl()){const ex=document.exitFullscreen||document.webkitExitFullscreen;if(ex){try{const p=ex.call(document);if(p&&p.catch)p.catch(()=>{});}catch(e){}}return;}const req=el.requestFullscreen||el.webkitRequestFullscreen;if(!req)return;try{const p=req.call(el);if(p&&p.catch)p.catch(()=>{});}catch(e){}}
 $$('.exhibit').forEach(sec=>{const p=sec.querySelector('.panel'),e=document.createElement('div');e.className='edge';e.setAttribute('aria-hidden','true');sec.insertBefore(e,p);
-  p.addEventListener('pointerdown',()=>{p.classList.add('held');const up=()=>{p.classList.remove('held');window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',up);};window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);});});
+  p.addEventListener('pointerdown',()=>{p.classList.add('held');const up=()=>{p.classList.remove('held');setTimeout(()=>{const a=document.activeElement;if(a&&p.contains(a)&&a.matches('input[type=range],input[type=checkbox],button'))a.blur();},0);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',up);};window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);});});
 function refreshPanelBtn(){$$('.exhibit').forEach(s=>{const b=s.querySelector('[data-act=panel]');b.hidden=!s.classList.contains('is-fs');b.textContent=s.classList.contains('no-panel')?'Regler anheften':'Regler lösen';});}
 function togglePanel(sec){if(!sec.classList.contains('is-fs'))return;hideTip();sec.classList.toggle('no-panel');refreshPanelBtn();}
 function onFS(){const f=fsEl();$$('.exhibit').forEach(s=>{const on=s===f;if(on&&!s.classList.contains('is-fs'))s.classList.add('no-panel');s.classList.toggle('is-fs',on);if(!on)s.classList.remove('no-panel');});$$('[data-act=fs]').forEach(b=>b.textContent=f?'Vollbild beenden':'Vollbild');refreshPanelBtn();}
+/* cheat sheet per tab, built from each demo's key list plus the shared keys; lives in the stage so it shows in fullscreen */
+const SHARED_KEYS=[['Leertaste','Pause / weiter'],['R','Neu starten'],['F','Vollbild'],['C','Regler im Vollbild anheften'],['1 · 2','Simulation wechseln'],['? · H','Diese Hilfe'],['Esc','Schließen']];
+ids.forEach(k=>{const box=document.createElement('div');box.className='keys';box.hidden=true;box.setAttribute('role','dialog');box.setAttribute('aria-label','Tastenkürzel');
+  const h=document.createElement('h4');h.textContent='Tastenkürzel';const dl=document.createElement('dl');
+  for(const [kk,t] of (demos[k].keys||[]).concat(SHARED_KEYS)){const dt=document.createElement('dt');kk.split(' ').forEach((p,i)=>{if(i)dt.append(' ');if(/^[+·…]$|^\/$/.test(p)){dt.append(p);return;}const kb=document.createElement('kbd');kb.textContent=p;dt.append(kb);});const dd=document.createElement('dd');dd.textContent=t;dl.append(dt,dd);}
+  box.append(h,dl);$('#ex-'+k+' .viz').append(box);});
+function toggleKeys(on){const b=$('#ex-'+active+' .keys');if(!b)return;b.hidden=on===undefined?!b.hidden:!on;}
 document.addEventListener('fullscreenchange',onFS);document.addEventListener('webkitfullscreenchange',onFS);
 document.addEventListener('keydown',e=>{
   if(e.metaKey||e.ctrlKey||e.altKey)return;const tg=e.target;if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.tagName==='SELECT'||tg.isContentEditable))return;
-  if(e.key==='Escape')hideTip();
+  if(e.key==='Escape'){hideTip();toggleKeys(false);}
+  if(e.key==='?'||e.key==='h'||e.key==='H'){toggleKeys();return;}
+  if(!(tg&&tg.classList&&tg.classList.contains('tab'))&&demos[active].key&&demos[active].key(e)){e.preventDefault();return;}
   if(e.key==='1'||e.key==='2'){go(ids[+e.key-1]);return;}
   if(e.key===' '&&!(tg&&(tg.tagName==='BUTTON'||tg.tagName==='SUMMARY'))){e.preventDefault();demos[active].paused=!demos[active].paused;refreshPause();return;}
   if(e.key==='f'||e.key==='F'){if(fsOK)toggleFS($('#ex-'+active));return;}
