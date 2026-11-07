@@ -26,6 +26,7 @@ Jeder Regler erklärt sich beim Überfahren mit der Maus.
 | `Shift` + `←` / `→` | Anstoß zu A / B |
 | `+` / `−` | Unruhe |
 | `L` | Stärke-Balken unter den Mustern |
+| `T` | Zeitleiste am unteren Rand |
 
 **Kritische Instabilität**
 

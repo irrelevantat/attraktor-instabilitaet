@@ -161,7 +161,7 @@ kbd{font-family:var(--f-mono);font-size:.74rem;padding:1px 5px;border:1px solid 
         <div class="hud"><div class="chip" id="ch1"><span class="dot"></span><span class="txt"><span class="nm"></span><span class="sb"></span></span></div>
           <div class="hud-btns"><button class="mini" data-act="pause" type="button">Pause</button><button class="mini" data-act="panel" type="button" hidden>Regler anheften</button><button class="mini" data-act="fs" type="button">Vollbild</button></div></div>
       </div>
-      <div class="tsbox"><canvas id="t1" aria-label="Zeitreihe: in welchem Muster sich der Zustand befindet"></canvas></div>
+      <div class="tsbox" data-show="ts=true"><canvas id="t1" aria-label="Zeitreihe: in welchem Muster sich der Zustand befindet"></canvas></div>
     </div>
     <aside class="panel">
       <div class="grp"><h3>Ablauf</h3>
@@ -185,6 +185,7 @@ kbd{font-family:var(--f-mono);font-size:.74rem;padding:1px 5px;border:1px solid 
         <label class="switch" for="l-lab" data-tip="Namen der Muster im Bild ein- oder ausblenden."><span class="lbl">Beschriftung</span><input type="checkbox" id="l-lab" data-c="labels"></label>
         <label class="switch" for="l-ax" data-tip="Die drei Achsen des Raums ein- oder ausblenden."><span class="lbl">Achsen</span><input type="checkbox" id="l-ax" data-c="axes"></label>
         <label class="switch" for="l-met" data-tip="Zeigt unter jedem Muster einen Balken mit seiner Anziehungskraft. Taste L."><span class="lbl">Stärke-Balken</span><input type="checkbox" id="l-met" data-c="meters"></label>
+        <label class="switch" for="l-ts" data-tip="Blendet unten die Zeitleiste ein: in welchem Muster der Zustand in den letzten Sekunden war. Taste T."><span class="lbl">Zeitleiste</span><input type="checkbox" id="l-ts" data-c="ts"></label>
         <label class="switch" for="l-rot" data-tip="Dreht den Raum langsam. Mit Ziehen lässt er sich auch von Hand drehen."><span class="lbl">Langsam drehen</span><input type="checkbox" id="l-rot" data-c="rot"></label>
         <details class="sub"><summary data-tip="Bezeichnungen an beiden Enden jeder Achse.">Achsen beschriften</summary>
           <div class="pairs"><input type="text" aria-label="Achse 1 links" data-t="x0"><input type="text" aria-label="Achse 1 rechts" data-t="x1"><input type="text" aria-label="Achse 2 unten" data-t="y0"><input type="text" aria-label="Achse 2 oben" data-t="y1"><input type="text" aria-label="Achse 3 vorn" data-t="z0"><input type="text" aria-label="Achse 3 hinten" data-t="z1"></div>
@@ -377,7 +378,7 @@ function legendRow(ctx,items,x,y,maxW){let cx=x,cy=y;ctx.font='500 11px '+MONO;c
    ===================================================================== */
 demos.lorenz=(function(){
   const sec=$('#ex-lorenz'),cv=$('#c1'),ts=$('#t1'),setChip=chip($('#ch1'));
-  const P={stage:'a',aA:0.9,aB:0.3,nz:1,tempo:0.3,trail:15,labels:true,axes:true,rot:false,meters:false,
+  const P={stage:'a',aA:0.9,aB:0.3,nz:1,tempo:0.3,trail:15,labels:true,axes:true,rot:false,meters:false,ts:false,
     nA:'',nB:'',x0:'',x1:'',y0:'',y1:'',z0:'',z1:''};
   const SG=10,BE=8/3,DT=0.004,drive=a=>44-20*a;
   /* stage: 'a' = only A (a soft wall keeps the state on the A side), 'b' = only B (mirrored wall), 'both' = free */
@@ -430,7 +431,7 @@ demos.lorenz=(function(){
     const m=map(s);head(ctx,proj(cam,m[0],m[1],m[2]),C.fg,5.5);
     const inA=s[0]<0;setChip(inA?'Muster A':'Muster B',inA?P.nA:P.nB,inA?C.a:C.b);
     const an=osd.anchor,ap=(an==='a'||an==='b')&&labPos[an];osd.draw(ctx,ap?ap[0]:w/2,ap?ap[1]:h-70,w,h);
-    drawTS();
+    if(P.ts)drawTS();
   }
   function drawTS(){
     const {ctx,w,h}=fit(ts),F=tsBox(w,h,40,12,16,12),span=20,t0=wt-span,X=t=>F.L+(t-t0)/span*F.pw;
@@ -446,7 +447,7 @@ demos.lorenz=(function(){
   const NM={a:'Muster A',b:'Muster B'},COL={a:C.a,b:C.b},vis=k=>P.stage==='both'||P.stage===k;
   const showStr=k=>osd.show(k,NM[k]+' · Anziehungskraft'+(vis(k)?'':' (ausgeblendet)'),P[k==='a'?'aA':'aB'],1,COL[k]);
   /* hotkeys: ←/→ pick a pattern (A is left, B is right), ↑/↓ or PageUp/PageDown change its attraction,
-     A/B show or hide a pattern, Shift+←/→ push toward that side, +/− change Unruhe, L toggles the strength meters */
+     A/B show or hide a pattern, Shift+←/→ push toward that side, +/− change Unruhe, L toggles the strength meters, T the timeline */
   function key(e){
     const k=e.key,lk=k.length===1?k.toLowerCase():k;
     if((k==='ArrowLeft'||k==='ArrowRight')&&e.shiftKey){const d=k==='ArrowLeft'?-1:1;kickDir=d;kick=0.25;osd.show(d<0?'a':'b','Anstoß zu '+(d<0?'A':'B'),null,1,d<0?C.a:C.b);return true;}
@@ -461,10 +462,11 @@ demos.lorenz=(function(){
       else{osd.show(lk,'Ein Muster bleibt immer sichtbar',null,1,COL[lk]);return true;}
       refresh();osd.show(lk,NM[lk]+(vis(lk)?' eingeblendet':' ausgeblendet'),null,1,COL[lk]);return true;}
     if(k==='+'||k==='-'||k==='−'){nudge(P,'nz',k==='+'?1:-1,e,0.1,0.05,0,3);refresh();osd.show('bottom','Unruhe',P.nz,3,C.fg);return true;}
+    if(lk==='t'){P.ts=!P.ts;refresh();osd.show('bottom','Zeitleiste '+(P.ts?'an':'aus'),null,1,C.fg);return true;}
     if(lk==='l'){P.meters=!P.meters;refresh();osd.show('top','Stärke-Balken '+(P.meters?'an':'aus'),null,1,C.fg);return true;}
     return false;
   }
-  const keys=[['← →','Muster A / B wählen (nochmal drücken oder Esc: abwählen)'],['↑ ↓','Anziehungskraft ändern (mit Shift fein)'],['Bild↑ Bild↓','ebenso, z. B. mit Präsentations-Clicker'],['A · B','Muster ein- / ausblenden'],['Shift + ← →','Anstoß zu A / B'],['+ −','Unruhe'],['L','Stärke-Balken']];
+  const keys=[['← →','Muster A / B wählen (nochmal drücken oder Esc: abwählen)'],['↑ ↓','Anziehungskraft ändern (mit Shift fein)'],['Bild↑ Bild↓','ebenso, z. B. mit Präsentations-Clicker'],['A · B','Muster ein- / ausblenden'],['Shift + ← →','Anstoß zu A / B'],['+ −','Unruhe'],['L','Stärke-Balken'],['T','Zeitleiste']];
   reset();
   return {paused:reduceMotion,step,draw,reset,key,keys};
 })();
